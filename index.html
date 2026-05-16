@@ -157,7 +157,7 @@
             <button class="role-btn active" onclick="changeRole('Gamer', this)">🕹️ Gamer</button>
             <button class="role-btn" onclick="changeRole('Editor', this)">🎬 Editor</button>
             <button class="role-btn" onclick="changeRole('Student', this)">📚 Student</button>
-            <button class="role-btn" onclick="changeRole('Workstation', this)">💼 Workstation</button>
+            <button class="role-btn" onclick="changeRole('Leader', this)">💼 Leader</button>
         </div>
 
         <div class="price-hero">₹<span id="priceLabel">15,000</span></div>
@@ -242,17 +242,16 @@
     </div>
 
     <script>
-// 1. DATABASE REGISTRATION KEYS (Swap these placeholders with your Firebase tokens)
-const firebaseConfig = {
-  apiKey: "AIzaSyCP1yvH-mJx7_vxtG4kl8PJforZIcWTXm4",
-  authDomain: "potato-builders.firebaseapp.com",
-  databaseURL: "https://potato-builders-default-rtdb.firebaseio.com",
-  projectId: "potato-builders",
-  storageBucket: "potato-builders.firebasestorage.app",
-  messagingSenderId: "829474107482",
-  appId: "1:829474107482:web:1113e79a0a38ec2787e863",
-  measurementId: "G-BD1S3Q1T6X"
-};
+        // 1. DATABASE REGISTRATION KEYS (Paste your 3 personal tokens here)
+        const firebaseConfig = {
+            apiKey: "YOUR_ACTUAL_API_KEY_HERE",
+            authDomain: "potato-builders.firebaseapp.com",
+            databaseURL: "https://potato-builders-default-rtdb.firebaseio.com",
+            projectId: "potato-builders",
+            storageBucket: "potato-builders.appspot.com",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID_HERE",
+            appId: "YOUR_APP_ID_HERE"
+        };
 
         // Initialize Global Infrastructure Engine
         firebase.initializeApp(firebaseConfig);
@@ -261,7 +260,7 @@ const firebaseConfig = {
         // GLOBAL STATE VARIABLES
         let cart = [];
         let currentRole = 'Gamer';
-        let marketItems = []; // Array is now completely populated directly from the cloud backend
+        let marketItems = []; 
         
         const slider = document.getElementById('budgetSlider');
         let computedAppraisalValue = 0;
@@ -541,7 +540,7 @@ const firebaseConfig = {
             document.getElementById('aiVal').innerText = "₹" + computedAppraisalValue.toLocaleString('en-IN');
         }
 
-        // CLOUD SUBMISSION ROUTINE (Push directly to backend nodes)
+        // CLOUD SUBMISSION ROUTINE
         function submitSell() {
             let titleText = document.getElementById('hardwareName').value.trim();
             let type = document.getElementById('hardwareType').value;
@@ -561,7 +560,6 @@ const firebaseConfig = {
                 timestamp: Date.now()
             };
 
-            // Pushes directly into the global cloud infrastructure
             database.ref('marketplace/items').push(newItem)
                 .then(() => {
                     closeModals();
@@ -573,19 +571,18 @@ const firebaseConfig = {
                 });
         }
 
-        // REAL-TIME LISTENER FOR INBOUND DATA ( Buyers side stream loop )
+        // REAL-TIME LISTENER FOR INBOUND DATA
         database.ref('marketplace/items').on('value', (snapshot) => {
             const data = snapshot.val();
-            marketItems = []; // Flush old static elements
+            marketItems = []; 
             
             if (data) {
-                // Convert object to array structure and sort by newest listing
                 Object.keys(data).forEach(key => {
                     marketItems.push({ id: key, ...data[key] });
                 });
                 marketItems.sort((a, b) => b.timestamp - a.timestamp);
             }
-            renderMarket(); // Redraw UI elements automatically for everyone
+            renderMarket(); 
         });
 
         // CART SYSTEM MANAGERS
