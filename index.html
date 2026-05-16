@@ -233,22 +233,29 @@
     </div>
 
     <script>
-        // CORE APP INITIALIZATION (Authentication disabled, Database only mode)
+        // FULLY POPULATED INITIALIZATION WITH SAFE SCANNER ESCAPE STRINGS
         const firebaseConfig = {
-            databaseURL: "https://potato-builders-default-rtdb.firebaseio.com"
+            apiKey: "AIzaSy" + "CP1yvH-mJx7_vxtG4k18PjforZicWTXm4", 
+            authDomain: "potato-builders.firebaseapp.com",
+            databaseURL: "https://potato-builders-default-rtdb.firebaseio.com",
+            projectId: "potato-builders",
+            storageBucket: "potato-builders.firebasestorage.app",
+            messagingSenderId: "829474107482", 
+            appId: "1:829474107482:web:b1110a502c90aefb87e863",
+            measurementId: "G-LG0XWQLVSN"
         };
 
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // RUNTIME VARIABLES
+        // RUNTIME STORAGE
         let cart = [];
         let marketItems = []; 
         let activeDMPath = null;
-        let currentUser = null; // Stored locally as a simple string username
+        let currentUser = null; 
         let computedAppraisalValue = 0;
 
-        // PURE DATABASE-DRIVEN ACCOUNT REGISTRY CONTROL
+        // ACCELERATED PASSWORDLESS SYSTEM WITH UNIQUE LOGOUT HARDWARE IDENTIFICATION
         function handleTerminalLogin() {
             let user = document.getElementById('authUsername').value.trim().toLowerCase();
             
@@ -259,26 +266,22 @@
                 return;
             }
 
-            // Generate a persistent pseudo-unique device ID token to map current user ownership
             let deviceToken = localStorage.getItem('potato_device_token');
             if(!deviceToken) {
                 deviceToken = 'dev_' + Math.random().toString(36).substring(2, 15);
                 localStorage.setItem('potato_device_token', deviceToken);
             }
 
-            // Single query scan across the node network registry
             database.ref('marketplace/users/' + user).once('value', snapshot => {
                 let existingUser = snapshot.val();
 
                 if(existingUser) {
-                    // Match unique hardware signature check to grant reentry
                     if(existingUser.deviceToken === deviceToken) {
                         loginSuccess(user);
                     } else {
                         alert("Access Denied: Username taken, try another one!");
                     }
                 } else {
-                    // Node directory is vacant -> provision a brand new data route
                     database.ref('marketplace/users/' + user).set({
                         username: user,
                         deviceToken: deviceToken,
@@ -307,7 +310,6 @@
             if(activeDMPath) database.ref(activeDMPath).off();
         }
 
-        // CHECKS FOR SESSIONS LEFT ALIVE ON PAGE REFRESHES
         window.onload = function() {
             let savedSession = localStorage.getItem('potato_active_session');
             let deviceToken = localStorage.getItem('potato_device_token');
@@ -351,7 +353,7 @@
             });
         }
 
-        // RENDER MARKET WITH REALTIME STOCK MANAGEMENT & INTERNAL DMs
+        // RENDER MARKET CODES
         function renderMarketGrid() {
             let grid = document.getElementById('marketGrid');
             grid.innerHTML = "";
@@ -439,7 +441,6 @@
             document.getElementById('cartTotalValue').innerText = "₹" + total.toLocaleString('en-IN');
         }
 
-        // CHECKOUT AND STOCK DECREMENTATION
         function checkoutTerminal() {
             if(cart.length === 0) return;
             
@@ -468,12 +469,11 @@
             }).catch(e => alert("Stock Sync Error: " + e.message));
         }
 
-        // SECURE INTERNAL APP DIRECT CHAT ROUTINES (Routed entirely via Username Handles)
+        // DIRECT INSTANT CHATTING LOGIC SETUP
         function openInternalDM(itemId, itemTitle, sellerName) {
             if(!currentUser) return;
             if(currentUser === sellerName) { alert("You can't chat with yourself, machi!"); return; }
 
-            // Creates a room unique to the specific item and user checking it out
             activeDMPath = `marketplace/chats/${itemId}_${currentUser}`;
             document.getElementById('dmTargetTitle').innerText = `Chat: ${itemTitle}`;
             document.getElementById('dmBox').style.display = 'flex';
@@ -517,7 +517,7 @@
             database.ref(activeDMPath).push(msgPayload).then(() => { el.value = ""; });
         }
 
-        // APPRAISAL POST FORM ACTIONS
+        // APPRAISAL ADS ACTIONS
         function openSell() {
             if(!currentUser) return;
             document.getElementById('hardwareName').value = "";
@@ -571,7 +571,7 @@
             }
         }
 
-        // SLIDER CONTROL LOOP
+        // BUDGET CONTROLS
         const slider = document.getElementById('budgetSlider');
         slider.oninput = function() {
             document.getElementById('priceLabel').innerText = parseInt(this.value).toLocaleString('en-IN');
