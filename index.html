@@ -243,16 +243,17 @@
     </div>
 
     <script>
-        // 1. DATABASE REGISTRATION KEYS (Paste your 3 tokens here)
-        const firebaseConfig = {
-            apiKey: "YOUR_ACTUAL_API_KEY_HERE",
-            authDomain: "potato-builders.firebaseapp.com",
-            databaseURL: "https://potato-builders-default-rtdb.firebaseio.com",
-            projectId: "potato-builders",
-            storageBucket: "potato-builders.appspot.com",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID_HERE",
-            appId: "YOUR_APP_ID_HERE"
-        };
+// 1. DATABASE REGISTRATION KEYS (Locked & Loaded for marketplace-web)
+const firebaseConfig = {
+    apiKey: "AIzaSyCP1yvH-mJx7_vxtG4k18PjforZicWTXm4", 
+    authDomain: "potato-builders.firebaseapp.com",
+    databaseURL: "https://potato-builders-default-rtdb.firebaseio.com",
+    projectId: "potato-builders",
+    storageBucket: "potato-builders.firebasestorage.app",
+    messagingSenderId: "829474107482", 
+    appId: "1:829474107482:web:eaa69a3b8d0859ab87e863",
+    measurementId: "G-ZPMDBE8TDZ"
+};
 
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
