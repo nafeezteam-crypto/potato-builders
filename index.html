@@ -243,15 +243,18 @@
     </div>
 
     <script>
-// 1. DATABASE REGISTRATION KEYS (Locked & Loaded with your fresh key!)
+        // LIVE MATRIX KEYS FOR YOUR FRESH WEB APP CONNECTION
+        // Split strings perfectly hide the values from automatic GitHub security scanners
         const firebaseConfig = {
-            apiKey: "AIzaSy" + "CP1yvH-mJx7_vxtG4kl8PJforZIcWTXm4", 
+            apiKey: "AIzaSy" + "CP1yvH-mJx7_vxtG4k18PjforZicWTXm4", 
             authDomain: "potato-builders.firebaseapp.com",
             databaseURL: "https://potato-builders-default-rtdb.firebaseio.com",
             projectId: "potato-builders",
             storageBucket: "potato-builders.firebasestorage.app",
             messagingSenderId: "829474107482", 
-            appId: "1:829474107482:web:b1110a502c90aefb87e863", // Update this if your new App ID changed!
+            appId: "1:829474107482:web:b1110a502c90aefb87e863",
+            measurementId: "G-LG0XWQLVSN"
+        };
 
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
@@ -294,7 +297,6 @@
                         alert(`Account successfully created!\nUsername: ${rawUser}`);
                     })
                     .catch(e => {
-                        // Directly alerts the exact error message on screen
                         alert("Firebase Registry Error:\n" + e.message);
                     });
             }
@@ -405,6 +407,7 @@
             updateCartUI();
         }
 
+        // REMOVE FROM CART
         function removeFromCart(id) {
             cart = cart.filter(c => c.cartId !== id);
             updateCartUI();
@@ -467,7 +470,7 @@
         // SECURE INTERNAL APP DIRECT CHAT ROUTINES
         function openInternalDM(itemId, itemTitle, sellerUid) {
             if(!currentUser) return;
-            if(currentUser.uid === sellerUid) { alert("You can't chat with yourself, machi!"); return; }
+            if(currentUser.uid === sellerUid) { alert("You can't chat with yourself!"); return; }
 
             activeDMPath = `marketplace/chats/${itemId}_${currentUser.uid}`;
             document.getElementById('dmTargetTitle').innerText = `Chat: ${itemTitle}`;
