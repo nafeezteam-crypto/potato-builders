@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Potato Builders | Budget PC Marketplace & Configurator</title>
-    <meta name="description" content="Welcome to Potato Builders. Appraise your hardware, calculate used component values, and configure the ultimate strategic budget PC build.">
+    <title>Potato Builders | Authorized PC Marketplace</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
     <style>
@@ -28,6 +28,10 @@
         
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; transition: 0.3s; overflow-x: hidden; }
 
+        /* AUTH GATE SYSTEM */
+        .auth-gate { position: fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        .auth-card { background: var(--card); padding: 40px; border-radius: 24px; border: 1px solid var(--border); width: 100%; max-width: 360px; text-align: center; }
+
         /* HEADER & NAVIGATION */
         .header { position: fixed; top: 0; width: 100%; height: 60px; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 1000; border-bottom: 1px solid var(--border); box-sizing: border-box; }
         .cart-trigger { cursor: pointer; position: relative; font-weight: 900; color: var(--primary); padding: 5px 10px; }
@@ -47,82 +51,81 @@
         .sidebar.active { left: 0; visibility: visible; }
         .nav-item { padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; font-weight: bold; font-size: 13px; text-transform: uppercase; }
 
-        /* CART PANEL (RIGHT) */
+        /* CART PANEL */
         .cart-panel { position: fixed; top: 0; right: -350px; width: 320px; height: 100%; background: var(--card); border-left: 1px solid var(--border); transition: 0.4s; z-index: 2000; padding: 70px 20px 20px 20px; box-sizing: border-box; display: flex; flex-direction: column; visibility: hidden; }
         .cart-panel.active { right: 0; visibility: visible; }
         .cart-header-title { font-size: 18px; font-weight: 900; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 15px; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
-        .cart-items-container { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; text-align: left; }
+        .cart-items-container { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
         .cart-item-card { background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 12px; border-radius: 10px; position: relative; }
-        .cart-item-title { font-weight: bold; font-size: 14px; margin-bottom: 4px; }
-        .cart-item-price { color: var(--primary); font-weight: bold; font-size: 13px; }
-        .remove-item-btn { position: absolute; top: 10px; right: 10px; background: none; border: none; color: #ff4444; cursor: pointer; font-weight: bold; font-size: 14px; }
+        .remove-item-btn { position: absolute; top: 10px; right: 10px; background: none; border: none; color: #ff4444; cursor: pointer; font-weight: bold; }
         .cart-footer { border-top: 1px solid var(--border); padding-top: 15px; margin-top: 15px; }
-        .cart-total-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 16px; margin-bottom: 15px; }
         .checkout-btn { width: 100%; background: var(--primary); border: none; color: white; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
-        .empty-cart-msg { color: #666; font-size: 14px; margin-top: 20px; text-align: center; }
 
         /* BUILDER INTERFACES */
-        .price-hero { font-size: 80px; font-weight: 900; margin: 10px 0; color: var(--text); text-align: center; }
+        .price-hero { font-size: 80px; font-weight: 900; margin: 10px 0; text-align: center; }
         input[type=range] { width: 100%; accent-color: var(--primary); margin-bottom: 30px; cursor: pointer; }
-        .role-selector { display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
-        .role-btn { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 10px 20px; border-radius: 30px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .role-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-
         .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         @media (max-width: 600px) { .config-grid { grid-template-columns: 1fr; } }
-        .config-card { background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid var(--border); text-align: left; }
+        .config-card { background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid var(--border); }
         .config-card h4 { color: var(--primary); margin: 0 0 15px 0; text-transform: uppercase; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
         .config-card button { width:100%; margin-top:15px; background:var(--primary); border:none; color:white; padding:10px; border-radius:8px; cursor:pointer; font-weight:bold; }
         .specs-list p { margin: 8px 0; font-size: 14px; border-bottom: 1px dashed rgba(128,128,128,0.1); padding-bottom: 4px; }
 
-        /* MARKETPLACE GRID WITH IMAGE SUPPORT */
+        /* MARKETPLACE SECTIONS */
         .market-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .market-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; text-align: left; }
+        .market-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
         .market-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; transition: 0.2s; position: relative; }
         .market-card:hover { border-color: var(--primary); }
-        
-        .market-img-container { width: 100%; height: 160px; background: #222; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; }
+        .market-img-container { width: 100%; height: 160px; background: #222; overflow: hidden; display: flex; align-items: center; justify-content: center; }
         .market-img { width: 100%; height: 100%; object-fit: cover; }
         .market-details { padding: 16px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
-
         .market-tag-container { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
-        .market-tag { font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: bold; text-transform: uppercase; background: rgba(255,255,255,0.05); color: #aaa; }
+        .market-tag { font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: bold; background: rgba(255,255,255,0.05); color: #aaa; }
         .market-tag.prime { background: rgba(1, 148, 11, 0.15); color: var(--primary); }
+        .market-item-name { font-size: 16px; font-weight: bold; margin: 0; }
+        .market-item-price { font-size: 18px; font-weight: 900; color: var(--primary); margin: 8px 0; }
         
-        .market-item-name { font-size: 16px; font-weight: bold; margin: 0 0 5px 0; line-height: 1.3; }
-        .market-item-price { font-size: 18px; font-weight: 900; color: var(--primary); margin-bottom: 15px; }
-        
+        /* SELLER SPECIFIC META INFO */
+        .seller-thoughts-box { font-size: 12px; color: #888; font-style: italic; background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 6px; margin-bottom: 12px; border-left: 2px solid var(--primary); }
+
         .market-action-row { display: flex; gap: 8px; }
-        .chat-seller-btn { display: flex; align-items: center; justify-content: center; background: #25D366; color: white; text-decoration: none; padding: 8px; border-radius: 6px; font-weight: bold; font-size: 13px; flex: 1; }
-        .delete-listing-btn { position: absolute; top: 10px; right: 10px; background: rgba(255, 0, 0, 0.85); color: white; border: none; width: 28px; height: 28px; border-radius: 50%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        .chat-seller-btn { display: flex; align-items: center; justify-content: center; background: #1a73e8; color: white; border: none; padding: 8px; border-radius: 6px; font-weight: bold; font-size: 13px; flex: 1; cursor: pointer; }
+        .delete-listing-btn { position: absolute; top: 10px; right: 10px; background: rgba(255, 0, 0, 0.85); color: white; border: none; width: 28px; height: 28px; border-radius: 50%; font-weight: bold; cursor: pointer; z-index: 10; }
 
-        /* MODAL */
+        /* MODALS */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 3000; justify-content: center; align-items: center; }
-        .modal-content { background: var(--card); width: 90%; max-width: 440px; padding: 30px; border-radius: 25px; border: 1px solid var(--primary); max-height: 90vh; overflow-y: auto; box-sizing: border-box; }
-        .modal-content label { font-size: 11px; color: #888; display: block; text-align: left; margin-bottom: 6px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
-        input, select { width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: #fff; border-radius: 8px; margin-bottom: 16px; box-sizing: border-box; font-size: 15px; }
-        input:focus, select:focus { border-color: var(--primary); outline: none; }
+        .modal-content { background: var(--card); width: 90%; max-width: 440px; padding: 30px; border-radius: 25px; border: 1px solid var(--primary); max-height: 90vh; overflow-y: auto; box-sizing: border-box; text-align: left; }
+        .modal-content label { font-size: 11px; color: #888; display: block; margin-bottom: 6px; font-weight: bold; text-transform: uppercase; }
+        input, select, textarea { width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: #fff; border-radius: 8px; margin-bottom: 16px; box-sizing: border-box; font-size: 14px; font-family: inherit; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); outline: none; }
 
-        /* CHAT LAYER */
-        .chat-toggle { position: fixed; bottom: 20px; right: 20px; background: var(--primary); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2500; box-shadow: 0 4px 15px rgba(1, 148, 11, 0.4); font-size: 24px; color: white; }
-        .chat-box { display: none; position: fixed; bottom: 90px; right: 20px; width: 350px; height: 450px; background: var(--chat-bg); border: 1px solid var(--border); border-radius: 20px; box-shadow: 0 8px 24 rgba(0,0,0,0.5); z-index: 2500; flex-direction: column; overflow: hidden; }
-        .chat-header { background: var(--primary); color: white; padding: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-        .chat-logs { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; font-size: 13px; }
-        .msg { padding: 10px 14px; border-radius: 15px; max-width: 80%; line-height: 1.4; }
-        .msg.ai { background: var(--card); color: var(--text); align-self: flex-start; border-bottom-left-radius: 2px; border: 1px solid var(--border); }
-        .msg.user { background: var(--primary); color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
-        .chat-input-area { display: flex; border-top: 1px solid var(--border); background: #000; }
-        .chat-input-area input { margin: 0; border: none; border-radius: 0; background: transparent; padding: 15px; color: white; flex: 1; }
-        .chat-input-area button { background: var(--primary); border: none; color: white; padding: 0 20px; cursor: pointer; font-weight: bold; }
+        /* DEDICATED DIRECT DM WINDOW SYSTEM */
+        .dm-box { display: none; position: fixed; bottom: 20px; right: 20px; width: 360px; height: 480px; background: var(--chat-bg); border: 1px solid var(--border); border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); z-index: 4000; flex-direction: column; overflow: hidden; }
+        .dm-header { background: #1a73e8; color: white; padding: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .dm-logs { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; font-size: 13px; }
+        .dm-input-area { display: flex; border-top: 1px solid var(--border); background: #000; }
+        .dm-input-area input { margin: 0; border: none; border-radius: 0; background: transparent; padding: 15px; color: white; flex: 1; }
+        .dm-input-area button { background: #1a73e8; border: none; color: white; padding: 0 20px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
+
+    <div class="auth-gate" id="authGate">
+        <div class="auth-card">
+            <h2 id="authTitle" style="text-transform: uppercase; margin-bottom: 25px; color: var(--primary);">Terminal Log</h2>
+            <input type="email" id="authEmail" placeholder="Access Email Address">
+            <input type="password" id="authPassword" placeholder="Security Token Passphrase">
+            <button onclick="handleAuthSubmit()" id="authSubmitBtn" style="background:var(--primary); color:white; border:none; padding:14px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer; text-transform:uppercase; margin-bottom:15px;">Login Terminal</button>
+            <div style="font-size:12px; color:#666; cursor:pointer;" onclick="toggleAuthMode()" id="authToggleMsg">Need credentials? Register an account</div>
+        </div>
+    </div>
 
     <div class="header">
         <div onclick="toggleSidebar()" style="cursor:pointer; font-size: 24px; padding: 5px 10px;">☰</div>
         <div style="font-weight: 900; letter-spacing: -1px;">LBPC <span style="color:var(--primary)">TERMINAL</span></div>
         <div style="display:flex; gap:20px; align-items:center;">
-            <div onclick="toggleTheme()" style="cursor:pointer; font-size: 12px; font-weight: bold;">🌓 MODE</div>
+            <div id="userDisplayTag" style="font-size:11px; color:#666;">Not Logged In</div>
+            <div onclick="logoutTerminal()" style="cursor:pointer; font-size: 11px; font-weight: bold; color: #ff4444;">🚪 EXIT</div>
             <div class="cart-trigger" onclick="toggleCart()">🛒 <span class="cart-count" id="cartCount">0</span></div>
         </div>
     </div>
@@ -145,34 +148,25 @@
         </div>
         <div class="cart-items-container" id="cartItemsContainer"></div>
         <div class="cart-footer">
-            <div class="cart-total-row">
+            <div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:15px;">
                 <span>Total:</span>
                 <span id="cartTotalValue">₹0</span>
             </div>
-            <button class="checkout-btn" onclick="checkoutTerminal()">Verify & Order</button>
+            <button class="checkout-btn" onclick="checkoutTerminal()">Verify & Buy Stocks</button>
         </div>
     </div>
 
     <div class="app-view active" id="marketView">
         <div class="market-header">
-            <h2 style="text-transform: uppercase; margin: 0; font-size: 24px; letter-spacing: -0.5px;">Matrix Marketplace</h2>
+            <h2 style="text-transform: uppercase; margin: 0; font-size: 24px;">Matrix Marketplace</h2>
             <button onclick="openSell()" style="background:var(--primary); color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:bold; cursor:pointer; text-transform:uppercase; font-size:12px;">+ Post an Ad</button>
         </div>
-        <div class="market-grid" id="marketGrid">
-            </div>
+        <div class="market-grid" id="marketGrid"></div>
     </div>
 
     <div class="app-view" id="buildView">
-        <div class="role-selector">
-            <button class="role-btn active" onclick="changeRole('Gamer', this)">🕹️ Gamer</button>
-            <button class="role-btn" onclick="changeRole('Editor', this)">🎬 Editor</button>
-            <button class="role-btn" onclick="changeRole('Student', this)">📚 Student</button>
-            <button class="role-btn" onclick="changeRole('Leader', this)">💼 Leader</button>
-        </div>
-
         <div class="price-hero">₹<span id="priceLabel">15,000</span></div>
         <input type="range" id="budgetSlider" min="15000" max="200000" step="1000" value="15000">
-
         <div class="config-grid">
             <div class="config-card">
                 <h4>Intel Configuration</h4>
@@ -196,17 +190,19 @@
                 <option value="Component">Component (GPU, CPU, RAM, etc.)</option>
                 <option value="Full PC">Full Desktop PC Setup</option>
                 <option value="Laptop">Laptop Computer</option>
-                <option value="Peripheral">Peripheral (Keyboard, Mouse, Monitor)</option>
             </select>
 
             <label>Item Name / Model Title</label>
-            <input type="text" id="hardwareName" placeholder="e.g., Logitech G Pro X, Lenovo Legion 5">
+            <input type="text" id="hardwareName" placeholder="e.g., RX 580 8GB, Core i5 Pack">
 
             <label>Image Thumbnail Link (URL)</label>
-            <input type="url" id="hardwareImg" placeholder="Paste an image web address (URL)">
+            <input type="url" id="hardwareImg" placeholder="Paste an image web address URL">
 
-            <label>Seller WhatsApp Number</label>
-            <input type="tel" id="sellerPhone" placeholder="e.g., 919876543210 (Include country code)">
+            <label>Stock Supply Volume Available</label>
+            <input type="number" id="hardwareStock" value="1" min="1" placeholder="How many units do you have to sell?">
+
+            <label>Seller Thoughts / Description Statement</label>
+            <textarea id="sellerThoughts" placeholder="What do you think about this component? Share condition details..." rows="3"></textarea>
 
             <label>Original Purchase Price</label>
             <input type="number" id="origPrice" placeholder="Enter original purchase cost (₹)" oninput="calculateHardwareValue()">
@@ -218,22 +214,14 @@
                 <option value="0.65">Rough / Heavily Used (35% Drop)</option>
             </select>
 
-            <label>Remaining Warranty Window</label>
-            <select id="hardwareWarranty" onchange="calculateHardwareValue()">
-                <option value="1.0">More than 1 Year left (0% Drop)</option>
-                <option value="0.9">Less than 6 Months left (10% Drop)</option>
-                <option value="0.75">No Warranty / Expired (25% Drop)</option>
-            </select>
-
             <label id="healthLabel">Component Life / Structural Health</label>
             <select id="hardwareHealth" onchange="calculateHardwareValue()">
-                <option value="1.0">Excellent Health: 90% - 100% (0% Drop)</option>
-                <option value="0.85">Moderate Health: 70% - 89% (15% Drop)</option>
-                <option value="0.65">Degraded Health: Below 70% (35% Drop)</option>
+                <option value="1.0">Excellent Health (0% Drop)</option>
+                <option value="0.85">Moderate Health (15% Drop)</option>
             </select>
 
-            <div style="background:rgba(1,148,11,0.08); padding:18px; border-radius:15px; margin-bottom:20px; border:1px solid var(--primary); text-align: left;">
-                <span style="font-size: 11px; color: #888; display: block; margin-bottom: 4px; font-weight: bold; letter-spacing: 0.5px;">LIVE VALUATION ESTIMATE</span>
+            <div style="background:rgba(1,148,11,0.08); padding:18px; border-radius:15px; margin-bottom:20px; border:1px solid var(--primary);">
+                <span style="font-size: 11px; color: #888; display: block; margin-bottom: 4px; font-weight: bold;">LIVE VALUATION ESTIMATE</span>
                 <b id="aiVal" style="font-size: 26px; color: var(--primary);">₹0</b>
             </div>
 
@@ -242,23 +230,20 @@
         </div>
     </div>
 
-    <div class="chat-toggle" onclick="toggleChatWindow()">💬</div>
-    <div class="chat-box" id="chatBox">
-        <div class="chat-header">
-            <span>⚡ AI Build Strategist</span>
-            <span style="cursor:pointer;" onclick="toggleChatWindow()">✖</span>
+    <div class="dm-box" id="dmBox">
+        <div class="dm-header">
+            <span id="dmTargetTitle">Seller Conversation</span>
+            <span style="cursor:pointer;" onclick="closeDMWindow()">✖</span>
         </div>
-        <div class="chat-logs" id="chatLogs">
-            <div class="msg ai">What's up, machi! Ready to shift some hardware? Drop your specs or ask me anything about configurations.</div>
-        </div>
-        <div class="chat-input-area">
-            <input type="text" id="chatInput" placeholder="Drop your hardware question here..." onkeypress="handleChatKey(event)">
-            <button onclick="sendChatMessage()">Send</button>
+        <div class="dm-logs" id="dmLogs"></div>
+        <div class="dm-input-area">
+            <input type="text" id="dmInput" placeholder="Write a direct secure message..." onkeypress="handleDMKey(event)">
+            <button onclick="sendDMMessage()">Send</button>
         </div>
     </div>
 
     <script>
-        // 1. DATABASE REGISTRATION KEYS (Paste your 3 personal tokens here)
+        // 1. DATABASE REGISTRATION KEYS (Paste your 3 tokens here)
         const firebaseConfig = {
             apiKey: "YOUR_ACTUAL_API_KEY_HERE",
             authDomain: "potato-builders.firebaseapp.com",
@@ -269,261 +254,126 @@
             appId: "YOUR_APP_ID_HERE"
         };
 
-        // Initialize Global Infrastructure Engine
         firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
         const database = firebase.database();
 
-        // GLOBAL STATE VARIABLES
+        // RUNTIME MEMORY
         let cart = [];
-        let currentRole = 'Gamer';
         let marketItems = []; 
-        
-        const slider = document.getElementById('budgetSlider');
+        let activeDMPath = null;
+        let authLoginMode = true; 
+        let currentUser = null;
         let computedAppraisalValue = 0;
 
-        // UI CONTROL LAYER NAVIGATION & INTERFACES
+        // AUTH CONTROL ROUTINES
+        function toggleAuthMode() {
+            authLoginMode = !authLoginMode;
+            document.getElementById('authTitle').innerText = authLoginMode ? "Terminal Log" : "Register Access";
+            document.getElementById('authSubmitBtn').innerText = authLoginMode ? "Login Terminal" : "Create Account";
+            document.getElementById('authToggleMsg').innerText = authLoginMode ? "Need credentials? Register an account" : "Have an account? Login here";
+        }
+
+        function handleAuthSubmit() {
+            let email = document.getElementById('authEmail').value.trim();
+            let pass = document.getElementById('authPassword').value;
+            if(!email || !pass) { alert("Complete security inputs."); return; }
+
+            if(authLoginMode) {
+                auth.signInWithEmailAndPassword(email, pass).catch(e => alert("Access Denied: " + e.message));
+            } else {
+                auth.createUserWithEmailAndPassword(email, pass).catch(e => alert("Registration Failed: " + e.message));
+            }
+        }
+
+        function logoutTerminal() { auth.signOut(); }
+
+        // WATCH AUTH MATRIX STATUS CHANGES
+        auth.onAuthStateChanged(user => {
+            if(user) {
+                currentUser = user;
+                document.getElementById('authGate').style.display = 'none';
+                document.getElementById('userDisplayTag').innerText = user.email;
+                listenToMarketplace();
+            } else {
+                currentUser = null;
+                document.getElementById('authGate').style.display = 'flex';
+                document.getElementById('userDisplayTag').innerText = "Not Logged In";
+            }
+        });
+
+        // VIEW UTILS
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
         function toggleTheme() { document.body.dataset.theme = document.body.dataset.theme === 'light' ? 'dark' : 'light'; }
         function closeModals() { document.getElementById('sellModal').style.display = 'none'; }
         function toggleCart() { document.getElementById('cartPanel').classList.toggle('active'); }
-        
-        function toggleChatWindow() { 
-            let box = document.getElementById('chatBox');
-            box.style.display = (box.style.display === 'flex') ? 'none' : 'flex';
-        }
 
         function switchTab(viewId) {
             document.querySelectorAll('.app-view').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            
             document.getElementById(viewId).classList.add('active');
             document.getElementById('btn-' + viewId).classList.add('active');
             if(document.getElementById('sidebar').classList.contains('active')) toggleSidebar();
         }
 
-        function changeRole(role, btn) {
-            currentRole = role;
-            document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            updateBuilds(parseInt(slider.value));
+        // DATABASE ADAPTER READ STREAMS
+        function listenToMarketplace() {
+            database.ref('marketplace/items').on('value', snapshot => {
+                const data = snapshot.val();
+                marketItems = [];
+                if(data) {
+                    Object.keys(data).forEach(key => {
+                        marketItems.push({ id: key, ...data[key] });
+                    });
+                    marketItems.sort((a,b) => b.timestamp - a.timestamp);
+                }
+                renderMarketGrid();
+            });
         }
 
-        // SLIDER EVENT LISTENER
-        slider.oninput = function() {
-            let v = parseInt(this.value);
-            document.getElementById('priceLabel').innerText = v.toLocaleString('en-IN');
-            updateBuilds(v);
-        };
-
-        // SYSTEM CONFIGURATION GENERATOR DATA TIER
-        function getBuildSpecs(v, role) {
-            let i = { cpu: "", mobo: "", ram: "", gpu: "", ssd: "" };
-            let a = { cpu: "", mobo: "", ram: "", gpu: "", ssd: "" };
-
-            if (v < 35000) {
-                i.cpu = "Intel Core i3-12100F (Modern Entry)";
-                i.mobo = "H610M Ultra Motherboard";
-                i.ram = "8GB DDR4 3200MHz Single Channel";
-                i.gpu = "Intel UHD Graphics 730 (Basic Output)";
-                i.ssd = "512GB NVMe M.2 Gen3 SSD";
-
-                a.cpu = "AMD Ryzen 5 4500 (6 Cores / 12 Threads)";
-                a.mobo = "A320M Basic Board";
-                a.ram = "8GB DDR4 3200MHz Single Channel";
-                a.gpu = "Integrated Core Graphics Cluster";
-                a.ssd = "512GB NVMe M.2 Gen3 SSD";
-
-                if (v >= 22000) {
-                    i.ram = "16GB DDR4 Dual Channel (8GB x 2)";
-                    a.cpu = "AMD Ryzen 5 5600G (High Performance APU)";
-                    a.mobo = "A520M Workhorse Board";
-                    a.ram = "16GB DDR4 3200MHz Dual Channel";
-                    a.gpu = "Radeon Vega 7 Integrated Engine";
-                }
-                if (v >= 28000) {
-                    i.gpu = "AMD Radeon RX 580 8GB (Pre-Owned Value King)";
-                    i.ssd = "512GB NVMe M.2 Drive";
-                    
-                    a.mobo = "B450M Platform Stack";
-                    a.gpu = "AMD Radeon RX 580 8GB (Refurbished Target)";
-                    a.ssd = "512GB Ultra Performance NVMe";
-                }
-            } 
-            else if (v < 75000) {
-                i.cpu = "Intel Core i3-12100F (4 Cores)";
-                i.mobo = "H610M Pro Panel";
-                i.ram = "16GB DDR4 3200MHz Dual Kit";
-                i.gpu = "NVIDIA GTX 1650 4GB DDR6";
-                i.ssd = "512GB NVMe M.2 Gen4";
-
-                a.cpu = "AMD Ryzen 5 5500 (Zen 3 Architecture)";
-                a.mobo = "A520M Solid Platform";
-                a.ram = "16GB DDR4 3200MHz Dual Kit";
-                a.gpu = "AMD Radeon RX 580 8GB Performance Stack";
-                a.ssd = "512GB NVMe M.2 Gen4";
-
-                if (v >= 40000) {
-                    i.gpu = "AMD Radeon RX 6600 8GB VRAM";
-                    a.cpu = "AMD Ryzen 5 5600 (Pure Value Gaming CPU)";
-                    a.gpu = "AMD Radeon RX 6600 8GB VRAM";
-                }
-                if (v >= 45000) {
-                    i.cpu = "Intel Core i5-12400F (6 Cores / 12 Threads)";
-                    i.mobo = "B760M Component Board";
-                    i.gpu = "AMD Radeon RX 6600 8GB VRAM";
-                    
-                    a.mobo = "B550M WiFi Mainboard";
-                    a.gpu = "AMD Radeon RX 6600 8GB VRAM";
-                }
-                if (v >= 50000) {
-                    i.gpu = (role === 'Gamer') ? "AMD Radeon RX 6650 XT 8GB" : "NVIDIA RTX 3500 / 4060 8GB Entry";
-                    i.ssd = "1TB NVMe Gen4 High Speed (5000MB/s)";
-                    
-                    a.gpu = (role === 'Gamer') ? "AMD Radeon RX 6650 XT 8GB" : "NVIDIA RTX 4060 8GB (DLSS Ready)";
-                    a.ssd = "1TB NVMe Gen4 High Speed (5000MB/s)";
-                    if (role === 'Editor' || role === 'Leader') {
-                        i.ram = "32GB DDR4 High Capacity Kit";
-                        a.ram = "32GB DDR4 High Capacity Kit";
-                    }
-                }
-                if (v >= 55000) {
-                    i.cpu = "Intel Core i5-12400F System Stack";
-                    i.gpu = "NVIDIA RTX 4060 8GB Standard Kit";
-                    
-                    a.cpu = "AMD Ryzen 5 7600 (Next-Gen AM5 Platform)";
-                    a.mobo = "A620M DDR5 Base Board";
-                    a.ram = "16GB DDR5 5200MHz High-Speed";
-                    a.gpu = "AMD Radeon RX 6650 XT 8GB";
-                }
-                if (v >= 60000) {
-                    i.cpu = "Intel Core i5-13400F (10 Cores)";
-                    i.ram = "16GB DDR5 5600MHz Speed Stack";
-                    i.mobo = "B760M DDR5 Edition";
-                    i.gpu = "NVIDIA RTX 4060 8GB Twin Fan";
-                    
-                    a.cpu = "AMD Ryzen 5 7600 (AM5 Native)";
-                    a.mobo = "B650M Gaming WiFi AM5";
-                    a.ram = "16GB DDR5 6000MHz CL30 Low Latency";
-                    a.gpu = "NVIDIA RTX 4060 8GB Twin Fan";
-                }
-                if (v >= 65000) {
-                    i.ram = "32GB DDR5 Dual Channel Array";
-                    i.gpu = (role === 'Gamer') ? "AMD Radeon RX 7600 XT 16GB" : "NVIDIA RTX 4060 Ti 8GB Twin";
-                    
-                    a.ram = "32GB DDR5 6000MHz CL30 Dual Kit";
-                    a.gpu = (role === 'Gamer') ? "AMD Radeon RX 7600 XT 16GB" : "NVIDIA RTX 4060 Ti 8GB Twin";
-                }
-            } 
-            else if (v < 200000) {
-                i.cpu = "Intel Core i5-14600K (14 Cores Extreme)";
-                i.mobo = "B760M Creator Pro WiFi";
-                i.ram = "32GB DDR5 6000MHz Speed Rack (16GB x 2)";
-                i.gpu = "NVIDIA RTX 4070 Super 12GB GDDR6X";
-                i.ssd = "1TB NVMe Premium Gen4 (7000MB/s)";
-
-                a.cpu = "AMD Ryzen 5 7600X High-Clock Core";
-                a.mobo = "B650M Gaming Plus WiFi";
-                a.ram = "32GB DDR5 6000MHz CL30 Array (16GB x 2)";
-                a.gpu = "NVIDIA RTX 4070 Super 12GB GDDR6X";
-                a.ssd = "1TB NVMe Premium Gen4 (7000MB/s)";
-
-                if (v >= 125000) {
-                    i.cpu = "Intel Core i7-13700F Powerhouse";
-                    i.gpu = "NVIDIA RTX 4070 Ti Super 16GB Array";
-                    i.ssd = "2TB High-Speed Gen4 NVMe";
-                    
-                    a.cpu = "AMD Ryzen 7 7700X (8 Cores / 16 Threads)";
-                    a.gpu = "NVIDIA RTX 4070 Ti Super 16GB Array";
-                    a.ssd = "2TB High-Speed Gen4 NVMe";
-                }
-                if (v >= 150000) {
-                    i.cpu = "Intel Core i7-14700K Processing Engine";
-                    i.mobo = "Z790 Overclocking Pro Base";
-                    i.gpu = "NVIDIA RTX 4080 Super 16GB Dominator";
-                    
-                    a.cpu = (role === 'Gamer') ? "AMD Ryzen 7 7800X3D (Gaming King)" : "AMD Ryzen 9 7900X (12 Cores)";
-                    a.gpu = "NVIDIA RTX 4080 Super 16GB Dominator";
-                }
-                if (v >= 175000) {
-                    i.cpu = "Intel Core i9-14900K Premium Flagship";
-                    i.ram = "32GB DDR5 6400MHz Low-Latency Tier";
-                    i.gpu = "NVIDIA RTX 4080 Super OC Edition";
-                    
-                    a.cpu = "AMD Ryzen 9 7950X3D Performance Engine";
-                    a.ram = "32GB DDR5 6400MHz Low-Latency Tier";
-                    a.gpu = (role === 'Gamer') ? "AMD Radeon RX 7900 XTX 24GB Speedster" : "NVIDIA RTX 4080 Super Matrix";
-                }
-            } 
-            else {
-                i.cpu = "Intel Core i9-14900KS (Special Edition)";
-                i.mobo = "ASUS ROG Maximus Z790 Dark Hero";
-                i.ram = "32GB DDR5 7200MHz Ultra-Clocked Array";
-                i.gpu = "NVIDIA RTX 5070 12GB Flagship Matrix";
-                i.ssd = "2TB NVMe Gen4 Enterprise Array";
-
-                a.cpu = "AMD Ryzen 9 7950X3D";
-                a.mobo = "ASUS ROG Crosshair X670E Hero";
-                a.ram = "32GB DDR5 6400MHz Low Latency CL30 Array";
-                a.gpu = "NVIDIA RTX 5070 12GB Flagship Matrix";
-                a.ssd = "2TB NVMe Gen4 Enterprise Array";
-            }
-            return { intel: i, amd: a };
-        }
-
-        function updateBuilds(v) {
-            let builds = getBuildSpecs(v, currentRole);
-            renderSpecs(builds.intel, 'intelSpecs');
-            renderSpecs(builds.amd, 'amdSpecs');
-        }
-
-        function renderSpecs(obj, targetId) {
-            let out = "";
-            for (let key in obj) { 
-                if(obj[key]) out += `<p><b>${key.toUpperCase()}:</b> ${obj[key]}</p>`; 
-            }
-            document.getElementById(targetId).innerHTML = out;
-        }
-
-        // RENDERING SYSTEM SUPPORTING DELETION, IMAGES, & CHAT LINKAGE
-        function renderMarket() {
+        // RENDER MARKET WITH REALTIME STOCK MANAGEMENT & INTERNAL DMs
+        function renderMarketGrid() {
             let grid = document.getElementById('marketGrid');
             grid.innerHTML = "";
-            
             if (marketItems.length === 0) {
-                grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; color:#666; padding:40px;">No components listed in the database right now.</div>`;
+                grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; color:#666; padding:40px;">No gear active in matrix.</div>`;
                 return;
             }
 
             marketItems.forEach(item => {
-                // Fallback default image placeholder if user didn't drop a valid link
                 let imgUrl = item.imageUrl ? item.imageUrl : "https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400";
+                let stockCount = parseInt(item.stocks) || 0;
+                let isOutOfStock = stockCount <= 0;
                 
-                // Construct standard WhatsApp Link Api framework
-                let sanitizePhone = item.phone ? item.phone.replace(/\D/g, '') : "919876543210";
-                let encodedMsg = encodeURIComponent(`Hi, I saw your ad on Potato Builders for the "${item.title}" listed at ₹${item.price}. Is it still available?`);
-                let waLink = `https://wa.me/${sanitizePhone}?text=${encodedMsg}`;
+                // Hide or change button state if out of stock
+                let buyActionBtn = isOutOfStock 
+                    ? `<button disabled style="background:#333; color:#666; border:none; padding:8px; border-radius:6px; font-weight:bold; font-size:13px;">SOLD OUT</button>`
+                    : `<button onclick="addToCart('${item.id}', '${item.title}', ${item.price})" style="background:var(--primary); border:none; color:white; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:13px;">🛒 +</button>`;
+
+                // Conditionally display delete button ONLY if you are the owner who posted it
+                let deleteBtn = (currentUser && item.sellerUid === currentUser.uid)
+                    ? `<button class="delete-listing-btn" onclick="deleteMarketItem('${item.id}')">✖</button>`
+                    : "";
 
                 grid.innerHTML += `
                     <div class="market-card">
-                        <button class="delete-listing-btn" onclick="deleteMarketItem('${item.id}', '${item.title}')" title="Remove Listing">✖</button>
-                        
+                        ${deleteBtn}
                         <div class="market-img-container">
                             <img src="${imgUrl}" class="market-img" onerror="this.src='https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400'">
                         </div>
-
                         <div class="market-details">
                             <div>
                                 <div class="market-item-name">${item.title}</div>
                                 <div class="market-tag-container">
                                     <span class="market-tag prime">${item.type}</span>
-                                    <span class="market-tag">${item.condition}</span>
+                                    <span class="market-tag" style="color:${isOutOfStock ? '#ff4444':'#01940b'}">Stock: ${stockCount} left</span>
                                 </div>
+                                ${item.thoughts ? `<div class="seller-thoughts-box"><b>Seller:</b> "${item.thoughts}"</div>` : ''}
                                 <div class="market-item-price">₹${item.price.toLocaleString('en-IN')}</div>
                             </div>
-                            
                             <div class="market-action-row">
-                                <button onclick="addToCart('${item.title}', ${item.price})" style="background:var(--primary); border:none; color:white; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:13px;">🛒 +</button>
-                                <a href="${waLink}" target="_blank" class="chat-seller-btn">💬 Chat Seller</a>
+                                ${buyActionBtn}
+                                <button onclick="openInternalDM('${item.id}', '${item.title}', '${item.sellerUid}')" class="chat-seller-btn">💬 Chat Seller</button>
                             </div>
                         </div>
                     </div>
@@ -531,129 +381,16 @@
             });
         }
 
-        // REMOVE LISTING ACTION CONTROLLER
-        function deleteMarketItem(itemId, itemTitle) {
-            if(confirm(`Are you sure you want to delete "${itemTitle}" from the marketplace?`)) {
-                database.ref('marketplace/items').child(itemId).remove()
-                    .then(() => {
-                        alert("Item removed successfully from the cloud matrix!");
-                    })
-                    .catch((err) => {
-                        alert("Error wiping node reference.");
-                        console.error(err);
-                    });
-            }
-        }
-
-        // CORE STRATEGIC APPRAISAL WINDOW
-        function openSell() {
-            document.getElementById('hardwareType').value = "Component";
-            document.getElementById('hardwareName').value = "";
-            document.getElementById('hardwareImg').value = "";
-            document.getElementById('sellerPhone').value = "";
-            document.getElementById('origPrice').value = ""; 
-            document.getElementById('hardwareCondition').value = "1.0";
-            document.getElementById('hardwareWarranty').value = "1.0";
-            document.getElementById('hardwareHealth').value = "1.0";
-            document.getElementById('aiVal').innerText = "₹0"; 
-            computedAppraisalValue = 0;
-            handleTypeChange();
-            document.getElementById('sellModal').style.display = 'flex';
-        }
-
-        function handleTypeChange() {
-            let type = document.getElementById('hardwareType').value;
-            let label = document.getElementById('healthLabel');
-            if (type === "Laptop") {
-                label.innerText = "Battery Health Profile";
-            } else if (type === "Peripheral") {
-                label.innerText = "Switch/Click & Structural Durability";
-            } else {
-                label.innerText = "Component Life / Structural Health";
-            }
-            calculateHardwareValue();
-        }
-
-        function calculateHardwareValue() {
-            let originalPrice = parseFloat(document.getElementById('origPrice').value) || 0;
-            let type = document.getElementById('hardwareType').value;
-            let conditionMod = parseFloat(document.getElementById('hardwareCondition').value);
-            let warrantyMod = parseFloat(document.getElementById('hardwareWarranty').value);
-            let healthMod = parseFloat(document.getElementById('hardwareHealth').value);
-            
-            let baseRate = 0.60; 
-            if (type === "Full PC") baseRate = 0.55;  
-            if (type === "Laptop") baseRate = 0.50;   
-            if (type === "Peripheral") baseRate = 0.45; 
-
-            computedAppraisalValue = Math.round(originalPrice * baseRate * conditionMod * warrantyMod * healthMod);
-            document.getElementById('aiVal').innerText = "₹" + computedAppraisalValue.toLocaleString('en-IN');
-        }
-
-        // CLOUD SUBMISSION ROUTINE WITH INPUT ADAPTATIONS
-        function submitSell() {
-            let titleText = document.getElementById('hardwareName').value.trim();
-            let imgLink = document.getElementById('hardwareImg').value.trim();
-            let phoneNum = document.getElementById('sellerPhone').value.trim();
-            let type = document.getElementById('hardwareType').value;
-            
-            if(!titleText) { alert("Please input a title for your item!"); return; }
-            if(!phoneNum) { alert("Please input a WhatsApp contact number!"); return; }
-            if(computedAppraisalValue <= 0) { alert("Please enter a valid original price!"); return; }
-
-            let condSelect = document.getElementById('hardwareCondition');
-            let warSelect = document.getElementById('hardwareWarranty');
-
-            let newItem = {
-                title: titleText,
-                imageUrl: imgLink,
-                phone: phoneNum,
-                price: computedAppraisalValue,
-                type: type,
-                condition: condSelect.options[condSelect.selectedIndex].text.split(' (')[0],
-                warranty: warSelect.options[warSelect.selectedIndex].text.split(' (')[0],
-                health: "Inspected",
-                timestamp: Date.now()
-            };
-
-            database.ref('marketplace/items').push(newItem)
-                .then(() => {
-                    closeModals();
-                    switchTab('marketView'); 
-                })
-                .catch((err) => {
-                    alert("Database latency error: Unable to sync listing.");
-                    console.error(err);
-                });
-        }
-
-        // REAL-TIME LISTENER FOR INBOUND DATA
-        database.ref('marketplace/items').on('value', (snapshot) => {
-            const data = snapshot.val();
-            marketItems = []; 
-            
-            if (data) {
-                Object.keys(data).forEach(key => {
-                    marketItems.push({ id: key, ...data[key] });
-                });
-                marketItems.sort((a, b) => b.timestamp - a.timestamp);
-            }
-            renderMarket(); 
-        });
-
-        // CART SYSTEM MANAGERS
-        function addBuildToCart(type) {
-            let price = parseInt(slider.value);
-            addToCart(`${type} Build (${currentRole})`, price);
-        }
-
-        function addToCart(title, price) {
-            cart.push({ id: Date.now() + Math.random(), title: title, price: price });
+        // CART AND STOCK DEDUCTION ROUTINES
+        function addToCart(itemId, title, price) {
+            let itemData = marketItems.find(i => i.id === itemId);
+            if(itemData && parseInt(itemData.stocks) <= 0) { alert("Out of stock!"); return; }
+            cart.push({ cartId: Date.now() + Math.random(), itemId: itemId, title: title, price: price });
             updateCartUI();
         }
 
         function removeFromCart(id) {
-            cart = cart.filter(item => item.id !== id);
+            cart = cart.filter(c => c.cartId !== id);
             updateCartUI();
         }
 
@@ -661,47 +398,173 @@
             document.getElementById('cartCount').innerText = cart.length;
             let container = document.getElementById('cartItemsContainer');
             container.innerHTML = "";
+            let total = 0;
             
             if(cart.length === 0) {
-                container.innerHTML = `<div class="empty-cart-msg">Your terminal cart is empty.</div>`;
+                container.innerHTML = `<div style="color:#666; text-align:center; margin-top:20px;">Cart is empty.</div>`;
                 document.getElementById('cartTotalValue').innerText = "₹0";
                 return;
             }
 
-            let total = 0;
-            cart.forEach(item => {
-                total += item.price;
+            cart.forEach(c => {
+                total += c.price;
                 container.innerHTML += `
                     <div class="cart-item-card">
-                        <div class="cart-item-title">${item.title}</div>
-                        <div class="cart-item-price">₹${item.price.toLocaleString('en-IN')}</div>
-                        <button class="remove-item-btn" onclick="removeFromCart(${item.id})">✖</button>
+                        <div><b>${c.title}</b></div>
+                        <div style="color:var(--primary)">₹${c.price.toLocaleString('en-IN')}</div>
+                        <button class="remove-item-btn" onclick="removeFromCart(${c.cartId})">✖</button>
                     </div>
                 `;
             });
             document.getElementById('cartTotalValue').innerText = "₹" + total.toLocaleString('en-IN');
         }
 
-        // FLOATING CHAT SYSTEM
-        function handleChatKey(e) { if(e.key === 'Enter') sendChatMessage(); }
+        // CHECKOUT TRANSFERS AND CRITICAL STOCK DECREMENTATION
+        function checkoutTerminal() {
+            if(cart.length === 0) return;
+            
+            let updates = {};
+            let outOfStockFlag = false;
 
-        function sendChatMessage() {
-            let input = document.getElementById('chatInput');
-            let text = input.value.trim();
-            if(!text) return;
+            cart.forEach(c => {
+                let dbItem = marketItems.find(i => i.id === c.itemId);
+                if(dbItem) {
+                    let newStock = parseInt(dbItem.stocks) - 1;
+                    if(newStock < 0) { outOfStockFlag = true; }
+                    updates[`marketplace/items/${c.itemId}/stocks`] = Math.max(0, newStock);
+                }
+            });
 
-            let logs = document.getElementById('chatLogs');
-            logs.innerHTML += `<div class="msg user">${text}</div>`;
-            input.value = "";
-            logs.scrollTop = logs.scrollHeight;
+            if(outOfStockFlag) {
+                alert("Transaction halted: One of your items sold out while checking out!");
+                return;
+            }
 
-            setTimeout(() => {
-                logs.innerHTML += `<div class="msg ai">Got it, machi! Processing configuration parameters for your query... Storage arrays and hardware channels look clean right now.</div>`;
-                logs.scrollTop = logs.scrollHeight;
-            }, 800);
+            database.ref().update(updates).then(() => {
+                alert("Order confirmed! Stock decremented successfully inside the database node.");
+                cart = [];
+                updateCartUI();
+                toggleCart();
+            }).catch(e => alert("Stock Sync Error: " + e.message));
         }
 
-        // INITIALIZATION RUNTIME ON READY
+        // SECURE INTERNAL APP DIRECT CHAT ROUTINES
+        function openInternalDM(itemId, itemTitle, sellerUid) {
+            if(!currentUser) return;
+            if(currentUser.uid === sellerUid) { alert("You can't chat with yourself, machi!"); return; }
+
+            // Create a unique combined path room for this buyer and this specific item listing
+            activeDMPath = `marketplace/chats/${itemId}_${currentUser.uid}`;
+            document.getElementById('dmTargetTitle').innerText = `Chat: ${itemTitle}`;
+            document.getElementById('dmBox').style.display = 'flex';
+
+            // Connect real-time message listener stream
+            database.ref(activeDMPath).on('value', snapshot => {
+                let logs = document.getElementById('dmLogs');
+                logs.innerHTML = "";
+                let msgs = snapshot.val();
+                if(msgs) {
+                    Object.keys(msgs).forEach(k => {
+                        let m = msgs[k];
+                        let alignStyle = m.senderEmail === currentUser.email ? 'align-self:flex-end; background:var(--primary);' : 'align-self:flex-start; background:#222;';
+                        logs.innerHTML += `<div style="padding:10px 14px; border-radius:12px; margin-bottom:6px; max-width:80%; ${alignStyle} color:white;">
+                            <div style="font-size:9px; opacity:0.5; margin-bottom:2px;">${m.senderEmail}</div>
+                            <div>${m.msgText}</div>
+                        </div>`;
+                    });
+                }
+                logs.scrollTop = logs.scrollHeight;
+            });
+        }
+
+        function closeDMWindow() {
+            if(activeDMPath) database.ref(activeDMPath).off();
+            document.getElementById('dmBox').style.display = 'none';
+        }
+
+        function handleDMKey(e) { if(e.key === 'Enter') sendDMMessage(); }
+
+        function sendDMMessage() {
+            let el = document.getElementById('dmInput');
+            let txt = el.value.trim();
+            if(!txt || !activeDMPath) return;
+
+            let msgPayload = {
+                senderEmail: currentUser.email,
+                msgText: txt,
+                timestamp: Date.now()
+            };
+
+            database.ref(activeDMPath).push(msgPayload).then(() => { el.value = ""; });
+        }
+
+        // APPRAISAL POST FORM ACTIONS
+        function openSell() {
+            if(!currentUser) return;
+            document.getElementById('hardwareName').value = "";
+            document.getElementById('hardwareImg').value = "";
+            document.getElementById('hardwareStock').value = "1";
+            document.getElementById('sellerThoughts').value = "";
+            document.getElementById('origPrice').value = "";
+            document.getElementById('aiVal').innerText = "₹0";
+            document.getElementById('sellModal').style.display = 'flex';
+        }
+
+        function handleTypeChange() {}
+        
+        function calculateHardwareValue() {
+            let orig = parseFloat(document.getElementById('origPrice').value) || 0;
+            let cond = parseFloat(document.getElementById('hardwareCondition').value);
+            let health = parseFloat(document.getElementById('hardwareHealth').value);
+            computedAppraisalValue = Math.round(orig * 0.60 * cond * health);
+            document.getElementById('aiVal').innerText = "₹" + computedAppraisalValue.toLocaleString('en-IN');
+        }
+
+        function submitSell() {
+            let title = document.getElementById('hardwareName').value.trim();
+            let img = document.getElementById('hardwareImg').value.trim();
+            let stockVol = parseInt(document.getElementById('hardwareStock').value) || 1;
+            let bioThoughts = document.getElementById('sellerThoughts').value.trim();
+
+            if(!title) { alert("Enter an item title!"); return; }
+            if(computedAppraisalValue <= 0) { alert("Appraisal price must exceed zero!"); return; }
+
+            let payload = {
+                title: title,
+                imageUrl: img,
+                stocks: stockVol,
+                thoughts: bioThoughts,
+                price: computedAppraisalValue,
+                type: document.getElementById('hardwareType').value,
+                condition: "Inspected Tier",
+                sellerUid: currentUser.uid,
+                timestamp: Date.now()
+            };
+
+            database.ref('marketplace/items').push(payload).then(() => {
+                closeModals();
+            }).catch(e => alert("Post Error: " + e.message));
+        }
+
+        function deleteMarketItem(id) {
+            if(confirm("Permanently strip this listing entry out of the cloud matrix?")) {
+                database.ref(`marketplace/items/${id}`).remove();
+            }
+        }
+
+        // STRATEGIC HARDWARE ALGORITHMS
+        const slider = document.getElementById('budgetSlider');
+        slider.oninput = function() {
+            document.getElementById('priceLabel').innerText = parseInt(this.value).toLocaleString('en-IN');
+            updateBuilds(parseInt(this.value));
+        };
+
+        function updateBuilds(v) {
+            let iOut = `<p><b>CPU:</b> i5 Platform Engine</p><p><b>GPU:</b> RX 580 8GB Value Variant</p><p><b>RAM:</b> 16GB Configuration Array</p>`;
+            let aOut = `<p><b>CPU:</b> Ryzen 5 Multi-Core Node</p><p><b>GPU:</b> RX 580 Gaming Standard</p><p><b>RAM:</b> 16GB Fast Allocation Array</p>`;
+            document.getElementById('intelSpecs').innerHTML = iOut;
+            document.getElementById('amdSpecs').innerHTML = aOut;
+        }
         updateBuilds(15000);
     </script>
 </body>
