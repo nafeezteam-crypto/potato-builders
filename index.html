@@ -6,7 +6,6 @@
     <title>Potato Builders | Authorized PC Marketplace</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
     <style>
@@ -17,13 +16,6 @@
             --text: #eee; 
             --border: #222; 
             --chat-bg: #111;
-        }
-        [data-theme="light"] { 
-            --bg: #f5f5f5; 
-            --card: #ffffff; 
-            --text: #111; 
-            --border: #ddd; 
-            --chat-bg: #eee;
         }
         
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; transition: 0.3s; overflow-x: hidden; }
@@ -97,7 +89,6 @@
         .modal-content { background: var(--card); width: 90%; max-width: 440px; padding: 30px; border-radius: 25px; border: 1px solid var(--primary); max-height: 90vh; overflow-y: auto; box-sizing: border-box; text-align: left; }
         .modal-content label { font-size: 11px; color: #888; display: block; margin-bottom: 6px; font-weight: bold; text-transform: uppercase; }
         input, select, textarea { width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: #fff; border-radius: 8px; margin-bottom: 16px; box-sizing: border-box; font-size: 14px; font-family: inherit; }
-        input:focus, select:focus, textarea:focus { border-color: var(--primary); outline: none; }
 
         /* DEDICATED DIRECT DM WINDOW SYSTEM */
         .dm-box { display: none; position: fixed; bottom: 20px; right: 20px; width: 360px; height: 480px; background: var(--chat-bg); border: 1px solid var(--border); border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); z-index: 4000; flex-direction: column; overflow: hidden; }
@@ -112,11 +103,10 @@
 
     <div class="auth-gate" id="authGate">
         <div class="auth-card">
-            <h2 id="authTitle" style="text-transform: uppercase; margin-bottom: 25px; color: var(--primary);">Terminal Log</h2>
-            <input type="text" id="authUsername" placeholder="Create Unique Username">
-            <input type="password" id="authLockPin" placeholder="Security Lock PIN Code (6+ digits)">
-            <button onclick="handleAuthSubmit()" id="authSubmitBtn" style="background:var(--primary); color:white; border:none; padding:14px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer; text-transform:uppercase; margin-bottom:15px;">Login Terminal</button>
-            <div style="font-size:12px; color:#666; cursor:pointer;" onclick="toggleAuthMode()" id="authToggleMsg">Need credentials? Register an account</div>
+            <h2 style="text-transform: uppercase; margin-bottom: 10px; color: var(--primary);">Terminal Log</h2>
+            <p style="font-size: 12px; color: #666; margin-bottom: 25px;">Enter username to synchronize workspace session.</p>
+            <input type="text" id="authUsername" placeholder="Enter Unique Username">
+            <button onclick="handleTerminalLogin()" style="background:var(--primary); color:white; border:none; padding:14px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer; text-transform:uppercase;">Connect Terminal</button>
         </div>
     </div>
 
@@ -243,83 +233,95 @@
     </div>
 
     <script>
-        // LIVE MATRIX KEYS FOR YOUR FRESH WEB APP CONNECTION
-        // Split strings perfectly hide the values from automatic GitHub security scanners
+        // CORE APP INITIALIZATION (Authentication disabled, Database only mode)
         const firebaseConfig = {
-            apiKey: "AIzaSy" + "CP1yvH-mJx7_vxtG4k18PjforZicWTXm4", 
-            authDomain: "potato-builders.firebaseapp.com",
-            databaseURL: "https://potato-builders-default-rtdb.firebaseio.com",
-            projectId: "potato-builders",
-            storageBucket: "potato-builders.firebasestorage.app",
-            messagingSenderId: "829474107482", 
-            appId: "1:829474107482:web:b1110a502c90aefb87e863",
-            measurementId: "G-LG0XWQLVSN"
+            databaseURL: "https://potato-builders-default-rtdb.firebaseio.com"
         };
 
         firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
         const database = firebase.database();
 
-        // RUNTIME STORAGE
+        // RUNTIME VARIABLES
         let cart = [];
         let marketItems = []; 
         let activeDMPath = null;
-        let authLoginMode = true; 
-        let currentUser = null;
+        let currentUser = null; // Stored locally as a simple string username
         let computedAppraisalValue = 0;
 
-        // AUTH SYSTEM REFACTORED TO USERNAME + LOCK PIN ARRAYS
-        function toggleAuthMode() {
-            authLoginMode = !authLoginMode;
-            document.getElementById('authTitle').innerText = authLoginMode ? "Terminal Log" : "Register Access";
-            document.getElementById('authSubmitBtn').innerText = authLoginMode ? "Login Terminal" : "Create Account";
-            document.getElementById('authToggleMsg').innerText = authLoginMode ? "Need credentials? Register an account" : "Have an account? Login here";
-            document.getElementById('authUsername').placeholder = authLoginMode ? "Enter Username" : "Create Unique Username";
-        }
-
-        function handleAuthSubmit() {
-            let rawUser = document.getElementById('authUsername').value.trim().toLowerCase();
-            let rawPin = document.getElementById('authLockPin').value.trim();
+        // PURE DATABASE-DRIVEN ACCOUNT REGISTRY CONTROL
+        function handleTerminalLogin() {
+            let user = document.getElementById('authUsername').value.trim().toLowerCase();
             
-            if(!rawUser || !rawPin) { alert("Please complete both inputs."); return; }
-            if(rawUser.includes(" ")) { alert("Usernames cannot contain spaces!"); return; }
-
-            // Stitches fake email and safe custom salted password for Firebase backend rules
-            let syntheticEmail = rawUser + "@potato.com";
-            let syntheticPassword = rawPin + "_potatosecure";
-
-            if(authLoginMode) {
-                auth.signInWithEmailAndPassword(syntheticEmail, syntheticPassword)
-                    .catch(e => alert("Terminal Entry Denied:\n" + e.message));
-            } else {
-                auth.createUserWithEmailAndPassword(syntheticEmail, syntheticPassword)
-                    .then(cred => {
-                        alert(`Account successfully created!\nUsername: ${rawUser}`);
-                    })
-                    .catch(e => {
-                        alert("Firebase Registry Error:\n" + e.message);
-                    });
+            if(!user) { alert("Please input a handle name."); return; }
+            if(user.includes(" ")) { alert("Usernames cannot contain spaces!"); return; }
+            if(user.includes(".") || user.includes("#") || user.includes("$") || user.includes("[") || user.includes("]")) {
+                alert("Special characters not allowed inside matrix nodes.");
+                return;
             }
+
+            // Generate a persistent pseudo-unique device ID token to map current user ownership
+            let deviceToken = localStorage.getItem('potato_device_token');
+            if(!deviceToken) {
+                deviceToken = 'dev_' + Math.random().toString(36).substring(2, 15);
+                localStorage.setItem('potato_device_token', deviceToken);
+            }
+
+            // Single query scan across the node network registry
+            database.ref('marketplace/users/' + user).once('value', snapshot => {
+                let existingUser = snapshot.val();
+
+                if(existingUser) {
+                    // Match unique hardware signature check to grant reentry
+                    if(existingUser.deviceToken === deviceToken) {
+                        loginSuccess(user);
+                    } else {
+                        alert("Access Denied: Username taken, try another one!");
+                    }
+                } else {
+                    // Node directory is vacant -> provision a brand new data route
+                    database.ref('marketplace/users/' + user).set({
+                        username: user,
+                        deviceToken: deviceToken,
+                        timestamp: Date.now()
+                    }).then(() => {
+                        loginSuccess(user);
+                    }).catch(e => alert("Database Node Connection Error: " + e.message));
+                }
+            });
         }
 
-        function logoutTerminal() { auth.signOut(); }
+        function loginSuccess(username) {
+            currentUser = username;
+            localStorage.setItem('potato_active_session', username);
+            document.getElementById('authGate').style.display = 'none';
+            document.getElementById('userDisplayTag').innerText = `USER: ${username.toUpperCase()}`;
+            listenToMarketplace();
+        }
 
-        // WATCH AUTH MATRIX STATUS CHANGES
-        auth.onAuthStateChanged(user => {
-            if(user) {
-                currentUser = user;
-                document.getElementById('authGate').style.display = 'none';
-                
-                // Show clean custom username inside toolbar layout instead of email
-                let cleanUsername = user.email.split('@')[0].toUpperCase();
-                document.getElementById('userDisplayTag').innerText = `USER: ${cleanUsername}`;
-                listenToMarketplace();
-            } else {
-                currentUser = null;
-                document.getElementById('authGate').style.display = 'flex';
-                document.getElementById('userDisplayTag').innerText = "Not Logged In";
+        function logoutTerminal() {
+            currentUser = null;
+            localStorage.removeItem('potato_active_session');
+            document.getElementById('authGate').style.display = 'flex';
+            document.getElementById('authUsername').value = "";
+            document.getElementById('userDisplayTag').innerText = "Not Logged In";
+            if(activeDMPath) database.ref(activeDMPath).off();
+        }
+
+        // CHECKS FOR SESSIONS LEFT ALIVE ON PAGE REFRESHES
+        window.onload = function() {
+            let savedSession = localStorage.getItem('potato_active_session');
+            let deviceToken = localStorage.getItem('potato_device_token');
+            if(savedSession && deviceToken) {
+                database.ref('marketplace/users/' + savedSession).once('value', snapshot => {
+                    let d = snapshot.val();
+                    if(d && d.deviceToken === deviceToken) {
+                        loginSuccess(savedSession);
+                    } else {
+                        logoutTerminal();
+                    }
+                });
             }
-        });
+        };
 
         // VIEW UTILS
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
@@ -367,7 +369,7 @@
                     ? `<button disabled style="background:#333; color:#666; border:none; padding:8px; border-radius:6px; font-weight:bold; font-size:13px;">SOLD OUT</button>`
                     : `<button onclick="addToCart('${item.id}', '${item.title}', ${item.price})" style="background:var(--primary); border:none; color:white; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:13px;">🛒 +</button>`;
 
-                let deleteBtn = (currentUser && item.sellerUid === currentUser.uid)
+                let deleteBtn = (currentUser && item.sellerName === currentUser)
                     ? `<button class="delete-listing-btn" onclick="deleteMarketItem('${item.id}')">✖</button>`
                     : "";
 
@@ -391,7 +393,7 @@
                             </div>
                             <div class="market-action-row">
                                 ${buyActionBtn}
-                                <button onclick="openInternalDM('${item.id}', '${item.title}', '${item.sellerUid}')" class="chat-seller-btn">💬 Chat Seller</button>
+                                <button onclick="openInternalDM('${item.id}', '${item.title}', '${item.sellerName}')" class="chat-seller-btn">💬 Chat Seller</button>
                             </div>
                         </div>
                     </div>
@@ -399,7 +401,7 @@
             });
         }
 
-        // CART AND STOCK DEDUCTION ROUTINES
+        // CART ROUTINES
         function addToCart(itemId, title, price) {
             let itemData = marketItems.find(i => i.id === itemId);
             if(itemData && parseInt(itemData.stocks) <= 0) { alert("Out of stock!"); return; }
@@ -407,7 +409,6 @@
             updateCartUI();
         }
 
-        // REMOVE FROM CART
         function removeFromCart(id) {
             cart = cart.filter(c => c.cartId !== id);
             updateCartUI();
@@ -467,12 +468,13 @@
             }).catch(e => alert("Stock Sync Error: " + e.message));
         }
 
-        // SECURE INTERNAL APP DIRECT CHAT ROUTINES
-        function openInternalDM(itemId, itemTitle, sellerUid) {
+        // SECURE INTERNAL APP DIRECT CHAT ROUTINES (Routed entirely via Username Handles)
+        function openInternalDM(itemId, itemTitle, sellerName) {
             if(!currentUser) return;
-            if(currentUser.uid === sellerUid) { alert("You can't chat with yourself!"); return; }
+            if(currentUser === sellerName) { alert("You can't chat with yourself, machi!"); return; }
 
-            activeDMPath = `marketplace/chats/${itemId}_${currentUser.uid}`;
+            // Creates a room unique to the specific item and user checking it out
+            activeDMPath = `marketplace/chats/${itemId}_${currentUser}`;
             document.getElementById('dmTargetTitle').innerText = `Chat: ${itemTitle}`;
             document.getElementById('dmBox').style.display = 'flex';
 
@@ -483,10 +485,9 @@
                 if(msgs) {
                     Object.keys(msgs).forEach(k => {
                         let m = msgs[k];
-                        let cleanSender = m.senderName ? m.senderName : "User";
-                        let alignStyle = m.senderUid === currentUser.uid ? 'align-self:flex-end; background:var(--primary);' : 'align-self:flex-start; background:#222;';
+                        let alignStyle = m.senderName === currentUser ? 'align-self:flex-end; background:var(--primary);' : 'align-self:flex-start; background:#222;';
                         logs.innerHTML += `<div style="padding:10px 14px; border-radius:12px; margin-bottom:6px; max-width:80%; ${alignStyle} color:white;">
-                            <div style="font-size:9px; opacity:0.5; margin-bottom:2px;">${cleanSender}</div>
+                            <div style="font-size:9px; opacity:0.5; margin-bottom:2px;">${m.senderName.toUpperCase()}</div>
                             <div>${m.msgText}</div>
                         </div>`;
                     });
@@ -507,11 +508,8 @@
             let txt = el.value.trim();
             if(!txt || !activeDMPath) return;
 
-            let myName = currentUser.email.split('@')[0];
-
             let msgPayload = {
-                senderUid: currentUser.uid,
-                senderName: myName,
+                senderName: currentUser,
                 msgText: txt,
                 timestamp: Date.now()
             };
@@ -550,8 +548,6 @@
             if(!title) { alert("Enter an item title!"); return; }
             if(computedAppraisalValue <= 0) { alert("Appraisal price must exceed zero!"); return; }
 
-            let myName = currentUser.email.split('@')[0];
-
             let payload = {
                 title: title,
                 imageUrl: img,
@@ -560,8 +556,7 @@
                 price: computedAppraisalValue,
                 type: document.getElementById('hardwareType').value,
                 condition: "Inspected Tier",
-                sellerUid: currentUser.uid,
-                sellerName: myName,
+                sellerName: currentUser,
                 timestamp: Date.now()
             };
 
