@@ -75,16 +75,26 @@
         .config-card button { width:100%; margin-top:15px; background:var(--primary); border:none; color:white; padding:10px; border-radius:8px; cursor:pointer; font-weight:bold; }
         .specs-list p { margin: 8px 0; font-size: 14px; border-bottom: 1px dashed rgba(128,128,128,0.1); padding-bottom: 4px; }
 
-        /* MARKETPLACE GRID */
+        /* MARKETPLACE GRID WITH IMAGE SUPPORT */
         .market-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .market-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; text-align: left; }
-        .market-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; transition: 0.2s; }
+        .market-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; text-align: left; }
+        .market-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; transition: 0.2s; position: relative; }
         .market-card:hover { border-color: var(--primary); }
-        .market-tag-container { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0; }
+        
+        .market-img-container { width: 100%; height: 160px; background: #222; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; }
+        .market-img { width: 100%; height: 100%; object-fit: cover; }
+        .market-details { padding: 16px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
+
+        .market-tag-container { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
         .market-tag { font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: bold; text-transform: uppercase; background: rgba(255,255,255,0.05); color: #aaa; }
         .market-tag.prime { background: rgba(1, 148, 11, 0.15); color: var(--primary); }
-        .market-item-name { font-size: 16px; font-weight: bold; margin: 0 0 5px 0; }
+        
+        .market-item-name { font-size: 16px; font-weight: bold; margin: 0 0 5px 0; line-height: 1.3; }
         .market-item-price { font-size: 18px; font-weight: 900; color: var(--primary); margin-bottom: 15px; }
+        
+        .market-action-row { display: flex; gap: 8px; }
+        .chat-seller-btn { display: flex; align-items: center; justify-content: center; background: #25D366; color: white; text-decoration: none; padding: 8px; border-radius: 6px; font-weight: bold; font-size: 13px; flex: 1; }
+        .delete-listing-btn { position: absolute; top: 10px; right: 10px; background: rgba(255, 0, 0, 0.85); color: white; border: none; width: 28px; height: 28px; border-radius: 50%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
 
         /* MODAL */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 3000; justify-content: center; align-items: center; }
@@ -191,6 +201,12 @@
 
             <label>Item Name / Model Title</label>
             <input type="text" id="hardwareName" placeholder="e.g., Logitech G Pro X, Lenovo Legion 5">
+
+            <label>Image Thumbnail Link (URL)</label>
+            <input type="url" id="hardwareImg" placeholder="Paste an image web address (URL)">
+
+            <label>Seller WhatsApp Number</label>
+            <input type="tel" id="sellerPhone" placeholder="e.g., 919876543210 (Include country code)">
 
             <label>Original Purchase Price</label>
             <input type="number" id="origPrice" placeholder="Enter original purchase cost (₹)" oninput="calculateHardwareValue()">
@@ -468,7 +484,7 @@
             document.getElementById(targetId).innerHTML = out;
         }
 
-        // LIVE RENDERING CONNECTED TO DATABASE STREAM
+        // RENDERING SYSTEM SUPPORTING DELETION, IMAGES, & CHAT LINKAGE
         function renderMarket() {
             let grid = document.getElementById('marketGrid');
             grid.innerHTML = "";
@@ -479,28 +495,62 @@
             }
 
             marketItems.forEach(item => {
+                // Fallback default image placeholder if user didn't drop a valid link
+                let imgUrl = item.imageUrl ? item.imageUrl : "https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400";
+                
+                // Construct standard WhatsApp Link Api framework
+                let sanitizePhone = item.phone ? item.phone.replace(/\D/g, '') : "919876543210";
+                let encodedMsg = encodeURIComponent(`Hi, I saw your ad on Potato Builders for the "${item.title}" listed at ₹${item.price}. Is it still available?`);
+                let waLink = `https://wa.me/${sanitizePhone}?text=${encodedMsg}`;
+
                 grid.innerHTML += `
                     <div class="market-card">
-                        <div>
-                            <div class="market-item-name">${item.title}</div>
-                            <div class="market-tag-container">
-                                <span class="market-tag prime">${item.type}</span>
-                                <span class="market-tag">${item.condition}</span>
-                            </div>
+                        <button class="delete-listing-btn" onclick="deleteMarketItem('${item.id}', '${item.title}')" title="Remove Listing">✖</button>
+                        
+                        <div class="market-img-container">
+                            <img src="${imgUrl}" class="market-img" onerror="this.src='https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400'">
                         </div>
-                        <div>
-                            <div class="market-item-price">₹${item.price.toLocaleString('en-IN')}</div>
-                            <button onclick="addToCart('${item.title}', ${item.price})" style="width:100%; background:var(--primary); border:none; color:white; padding:8px; border-radius:6px; cursor:pointer; font-weight:bold;">Add to Cart</button>
+
+                        <div class="market-details">
+                            <div>
+                                <div class="market-item-name">${item.title}</div>
+                                <div class="market-tag-container">
+                                    <span class="market-tag prime">${item.type}</span>
+                                    <span class="market-tag">${item.condition}</span>
+                                </div>
+                                <div class="market-item-price">₹${item.price.toLocaleString('en-IN')}</div>
+                            </div>
+                            
+                            <div class="market-action-row">
+                                <button onclick="addToCart('${item.title}', ${item.price})" style="background:var(--primary); border:none; color:white; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:13px;">🛒 +</button>
+                                <a href="${waLink}" target="_blank" class="chat-seller-btn">💬 Chat Seller</a>
+                            </div>
                         </div>
                     </div>
                 `;
             });
         }
 
-        // CORE STRATEGIC APPRAISAL ENGINE MODULATORS
+        // REMOVE LISTING ACTION CONTROLLER
+        function deleteMarketItem(itemId, itemTitle) {
+            if(confirm(`Are you sure you want to delete "${itemTitle}" from the marketplace?`)) {
+                database.ref('marketplace/items').child(itemId).remove()
+                    .then(() => {
+                        alert("Item removed successfully from the cloud matrix!");
+                    })
+                    .catch((err) => {
+                        alert("Error wiping node reference.");
+                        console.error(err);
+                    });
+            }
+        }
+
+        // CORE STRATEGIC APPRAISAL WINDOW
         function openSell() {
             document.getElementById('hardwareType').value = "Component";
             document.getElementById('hardwareName').value = "";
+            document.getElementById('hardwareImg').value = "";
+            document.getElementById('sellerPhone').value = "";
             document.getElementById('origPrice').value = ""; 
             document.getElementById('hardwareCondition').value = "1.0";
             document.getElementById('hardwareWarranty').value = "1.0";
@@ -540,11 +590,15 @@
             document.getElementById('aiVal').innerText = "₹" + computedAppraisalValue.toLocaleString('en-IN');
         }
 
-        // CLOUD SUBMISSION ROUTINE
+        // CLOUD SUBMISSION ROUTINE WITH INPUT ADAPTATIONS
         function submitSell() {
             let titleText = document.getElementById('hardwareName').value.trim();
+            let imgLink = document.getElementById('hardwareImg').value.trim();
+            let phoneNum = document.getElementById('sellerPhone').value.trim();
             let type = document.getElementById('hardwareType').value;
+            
             if(!titleText) { alert("Please input a title for your item!"); return; }
+            if(!phoneNum) { alert("Please input a WhatsApp contact number!"); return; }
             if(computedAppraisalValue <= 0) { alert("Please enter a valid original price!"); return; }
 
             let condSelect = document.getElementById('hardwareCondition');
@@ -552,6 +606,8 @@
 
             let newItem = {
                 title: titleText,
+                imageUrl: imgLink,
+                phone: phoneNum,
                 price: computedAppraisalValue,
                 type: type,
                 condition: condSelect.options[condSelect.selectedIndex].text.split(' (')[0],
@@ -626,15 +682,7 @@
             document.getElementById('cartTotalValue').innerText = "₹" + total.toLocaleString('en-IN');
         }
 
-        function checkoutTerminal() {
-            if(cart.length === 0) { alert("Cart is empty!"); return; }
-            alert("Order verified successfully! Processing with local distributors.");
-            cart = [];
-            updateCartUI();
-            toggleCart();
-        }
-
-        // SIDEBAR ARTIFICIAL INTELLIGENCE LOG SYSTEM
+        // FLOATING CHAT SYSTEM
         function handleChatKey(e) { if(e.key === 'Enter') sendChatMessage(); }
 
         function sendChatMessage() {
