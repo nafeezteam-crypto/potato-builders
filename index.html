@@ -43,7 +43,7 @@
         .sidebar.active { left: 0; visibility: visible; }
         .nav-item { padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; font-weight: bold; font-size: 13px; text-transform: uppercase; }
 
-        /* REBUILT STEP WIZARD BUILDER GRAPHICS */
+        /* STEP WIZARD BUILDER GRAPHICS */
         .wizard-container { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 35px; max-width: 600px; margin: 0 auto; box-sizing: border-box; }
         .wizard-step { display: none; }
         .wizard-step.active { display: block; }
@@ -56,7 +56,8 @@
         .category-card.selected { border-color: var(--primary); background: rgba(1, 148, 11, 0.05); color: var(--primary); }
         .spec-output-box { background: #000; border: 1px solid var(--border); padding: 20px; border-radius: 12px; margin-top: 20px; }
         .spec-line { padding: 8px 0; border-bottom: 1px dashed #222; font-size: 14px; }
-        .treasure-box { background: rgba(255, 215, 0, 0.05); border: 1px dashed #ffd700; padding: 15px; border-radius: 12px; margin-top: 20px; display: flex; align-items: center; gap: 12px; }
+        .treasure-box { background: rgba(255, 215, 0, 0.02); border: 1px dashed #444; padding: 15px; border-radius: 12px; margin-top: 20px; display: flex; align-items: center; gap: 12px; }
+        .treasure-box.unlocked { border-color: #ffd700; background: rgba(255, 215, 0, 0.05); }
 
         /* CART PANEL */
         .cart-panel { position: fixed; top: 0; right: -350px; width: 320px; height: 100%; background: var(--card); border-left: 1px solid var(--border); transition: 0.4s; z-index: 2000; padding: 70px 20px 20px 20px; box-sizing: border-box; display: flex; flex-direction: column; visibility: hidden; }
@@ -93,7 +94,7 @@
         .modal-content label { font-size: 11px; color: #888; display: block; margin-bottom: 6px; font-weight: bold; text-transform: uppercase; }
         input, select, textarea { width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: #fff; border-radius: 8px; margin-bottom: 16px; box-sizing: border-box; font-size: 14px; font-family: inherit; }
 
-        /* CHAT BOX CONTAINER */
+        /* CHAT SYSTEMS */
         .dm-box { display: none; position: fixed; bottom: 20px; right: 20px; width: 360px; height: 480px; background: var(--chat-bg); border: 1px solid var(--border); border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); z-index: 4000; flex-direction: column; overflow: hidden; }
         .dm-header { background: #1a73e8; color: white; padding: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
         .dm-logs { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; font-size: 13px; }
@@ -168,9 +169,9 @@
                 <div style="font-size: 44px; font-weight: 900; color: white; text-align: center; margin: 20px 0;">
                     ₹<span id="wizPriceDisplay">15,000</span>
                 </div>
-                <input type="range" id="wizBudgetSlider" min="15000" max="400000" step="5000" value="15000" oninput="syncBudgetInputs('slider')">
+                <input type="range" id="wizBudgetSlider" min="15000" max="400000" step="1000" value="15000" oninput="syncBudgetInputs('slider')">
                 
-                <label style="font-size: 11px; font-weight: bold; color: #555;">MANUAL SPECIFICATION INPUT</label>
+                <label style="font-size: 11px; font-weight: bold; color: #555;">MANUAL SPECIFICATION INPUT (15,000 - 4,00,000)</label>
                 <input type="number" id="wizBudgetManual" min="15000" max="400000" value="15000" oninput="syncBudgetInputs('manual')">
                 
                 <div class="wizard-nav-row" style="justify-content: flex-end;">
@@ -196,7 +197,7 @@
 
                 <div class="wizard-nav-row">
                     <button class="wiz-btn" onclick="changeWizardStep(1)">⬅ Back</button>
-                    <button class="wiz-btn next" onclick="changeWizardStep(3)">Next Stage ➔</button>
+                    <button class="wiz-btn next" onclick="goToStep3()">Next Stage ➔</button>
                 </div>
             </div>
 
@@ -220,11 +221,11 @@
                     <input type="text" id="paymentAccountString" placeholder="Enter card numbers or VPA routing handle">
                 </div>
 
-                <div class="treasure-box">
-                    <input type="checkbox" id="useTreasureCheckbox" style="width: auto; margin: 0;" onchange="calculateFinalWizardPrice()">
+                <div class="treasure-box" id="treasureContainer">
+                    <input type="checkbox" id="useTreasureCheckbox" style="width: auto; margin: 0;" onchange="calculateFinalWizardPrice()" disabled>
                     <div>
-                        <strong style="color: #ffd700; font-size: 14px;">🧰 Inject Treasure Coins Discount?</strong>
-                        <span style="font-size: 12px; display: block; color: #aaa; margin-top: 2px;">Spends 200 treasure coins to cut price by ₹100. (Max scaling bonus limit: ₹500 discount cap).</span>
+                        <strong style="color: #666; font-size: 14px;" id="treasureTitle">🧰 Treasure Coins Locked</strong>
+                        <span style="font-size: 12px; display: block; color: #666;" id="treasureDesc">Checking database files... Only users with previous completed checkout orders can use coins.</span>
                     </div>
                 </div>
 
@@ -294,11 +295,6 @@
                 <option value="0.85">Good / Clean (15% Drop)</option>
                 <option value="0.65">Rough / Heavily Used (35% Drop)</option>
             </select>
-            <label>Component Life / Structural Health</label>
-            <select id="hardwareHealth" onchange="calculateHardwareValue()">
-                <option value="1.0">Excellent Health (0% Drop)</option>
-                <option value="0.85">Moderate Health (15% Drop)</option>
-            </select>
             <div style="background:rgba(1,148,11,0.08); padding:18px; border-radius:15px; margin-bottom:20px; border:1px solid var(--primary);">
                 <span style="font-size: 11px; color: #888; display: block; margin-bottom: 4px; font-weight: bold;">LIVE VALUATION ESTIMATE</span>
                 <b id="aiVal" style="font-size: 26px; color: var(--primary);">₹0</b>
@@ -336,25 +332,21 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // ACCREDITED LOCAL PASSWORDS DIRECTORY
         const localAccounts = {
             "nafeez": "1234",
             "admin": "potato2026",
             "guest": "0000"
         };
 
-        // GLOBAL APPLICATION RUNTIME HANDLES
         let cart = [];
         let marketItems = []; 
         let activeDMPath = null;
         let currentUser = null; 
         let computedAppraisalValue = 0;
         
-        // BUILDER INTERNAL VARIABLES
         let selectedCategoryNode = 'gaming';
         let activeSelectedBudget = 15000;
 
-        // TERMINAL VALIDATION INTERFACES
         function handleTerminalLogin() {
             let user = document.getElementById('authUsername').value.trim().toLowerCase();
             let pass = document.getElementById('authPassword').value.trim();
@@ -372,7 +364,7 @@
             document.getElementById('authGate').style.display = 'none';
             document.getElementById('userDisplayTag').innerText = `USER: ${username.toUpperCase()}`;
             listenToMarketplace();
-            selectCategory('gaming'); // initialize wizard structures
+            selectCategory('gaming');
         }
 
         function logoutTerminal() {
@@ -399,7 +391,7 @@
             if(document.getElementById('sidebar').classList.contains('active')) toggleSidebar();
         }
 
-        // REBUILT ADVANCED STEP WIZARD DRIVERS
+        // FIXED RANGE SYNC ENGINE
         function syncBudgetInputs(source) {
             let slider = document.getElementById('wizBudgetSlider');
             let manual = document.getElementById('wizBudgetManual');
@@ -422,6 +414,59 @@
         function changeWizardStep(stepNum) {
             document.querySelectorAll('.wizard-step').forEach(s => s.classList.remove('active'));
             document.getElementById('wizStep' + stepNum).classList.add('active');
+        }
+
+        // STEP 3 ROUTER: RUNS CLOUD PURCHASE VERIFICATION BEFORE ENABLING TREASURE COINS
+        function goToStep3() {
+            changeWizardStep(3);
+            calculateFinalWizardPrice();
+            
+            if (!currentUser) return;
+
+            // Reset UI state to checking
+            let tBox = document.getElementById('treasureContainer');
+            let tCheckbox = document.getElementById('useTreasureCheckbox');
+            let tTitle = document.getElementById('treasureTitle');
+            let tDesc = document.getElementById('treasureDesc');
+            
+            tCheckbox.disabled = true;
+            tCheckbox.checked = false;
+            tBox.classList.remove('unlocked');
+            tTitle.innerText = "🧰 Checking Purchase Matrix...";
+            tTitle.style.color = "#666";
+            tDesc.innerText = "Searching system nodes for completed marketplace transactions...";
+
+            // Query previous orders to see if this user has bought before
+            database.ref('marketplace/orders').once('value', snapshot => {
+                let orders = snapshot.val();
+                let hasPurchased = false;
+
+                if (orders) {
+                    Object.keys(orders).forEach(key => {
+                        if (orders[key].buyerName === currentUser) {
+                            hasPurchased = true;
+                        }
+                    });
+                }
+
+                if (hasPurchased) {
+                    // Unlock the gold treasure mechanics
+                    tCheckbox.disabled = false;
+                    tBox.classList.add('unlocked');
+                    tTitle.innerText = "✨ Treasure Coins Active!";
+                    tTitle.style.color = "#ffd700";
+                    tDesc.innerText = "Verified Customer! 200 coins checked. Apply code to slash ₹100 (Max ₹500 discount)";
+                    tDesc.style.color = "#aaa";
+                } else {
+                    // Restrict usage
+                    tCheckbox.disabled = true;
+                    tTitle.innerText = "🔒 Treasure Locked";
+                    tTitle.style.color = "#ff4444";
+                    tDesc.innerText = "Access Denied: You must complete at least one store checkout purchase to unlock coin drops.";
+                    tDesc.style.color = "#666";
+                }
+                calculateFinalWizardPrice();
+            });
         }
 
         function selectCategory(catId) {
@@ -466,8 +511,8 @@
         function calculateFinalWizardPrice() {
             let basePrice = activeSelectedBudget;
             let discount = 0;
-            if (document.getElementById('useTreasureCheckbox').checked) {
-                discount = 500; // Simulated flat premium cap optimization directly
+            if (document.getElementById('useTreasureCheckbox').checked && !document.getElementById('useTreasureCheckbox').disabled) {
+                discount = 500; 
             }
             let finalCost = basePrice - discount;
             document.getElementById('wizardInvoiceTotal').innerText = "₹" + finalCost.toLocaleString('en-IN');
@@ -500,7 +545,7 @@
             }).catch(e => alert("Network Error: " + e.message));
         }
 
-        // MARKET REST INTERACTIVE DRIVERS
+        // MARKET STORE COMPONENT INTERACTION
         function listenToMarketplace() {
             database.ref('marketplace/items').on('value', snapshot => {
                 const data = snapshot.val();
@@ -558,11 +603,28 @@
         function checkoutTerminal() {
             if(cart.length === 0) return;
             let updates = {};
+            let orderId = "order_" + Date.now();
+            
+            // Record checkout in orders list so they become an eligible customer
+            let checkoutRecord = {
+                orderType: "Marketplace Checkout",
+                buyerName: currentUser,
+                invoiceCost: cart.reduce((acc, current) => acc + current.price, 0),
+                timestamp: Date.now()
+            };
+            updates[`marketplace/orders/${orderId}`] = checkoutRecord;
+
             cart.forEach(c => {
                 let dbItem = marketItems.find(i => i.id === c.itemId);
                 if(dbItem) { updates[`marketplace/items/${c.itemId}/stocks`] = Math.max(0, parseInt(dbItem.stocks) - 1); }
             });
-            database.ref().update(updates).then(() => { alert("Checked out!"); cart = []; updateCartUI(); toggleCart(); });
+            
+            database.ref().update(updates).then(() => { 
+                alert("Checked out successfully! Your profile is verified as an active customer node."); 
+                cart = []; 
+                updateCartUI(); 
+                toggleCart(); 
+            });
         }
 
         function openInternalDM(itemId, itemTitle, sellerName) {
