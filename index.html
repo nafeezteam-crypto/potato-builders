@@ -90,7 +90,7 @@
         .tab-navigation { display: flex; justify-content: center; gap: 15px; margin-top: 10px; margin-bottom: 25px; position: relative; z-index: 50; }
         .tab-btn { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 12px 30px; border-radius: var(--radius); font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; transition: 0.3s; box-shadow: var(--shadow); backdrop-filter: var(--backdrop); }
         .tab-btn.active { border-color: var(--primary); color: var(--primary); background: rgba(1, 148, 11, 0.05); }
-        body.theme-minimalist .tab-btn.active { background: #000; color: #fff; }
+        body.theme-minimalist .tab-btn.active { background: #000; color: #fff; border-color: #000; }
         body.theme-frutiger .tab-btn { background: rgba(255, 255, 255, 0.3); border: 1px solid rgba(255, 255, 255, 0.5); color: #0f172a; padding: 10px 22px; border-radius: 30px; font-size: 12px; font-weight: 700; letter-spacing: 0.3px; white-space: nowrap; box-shadow: 0 2px 10px rgba(0,0,0,0.02), inset 0 1px 2px rgba(255,255,255,0.6); transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
         body.theme-frutiger .tab-btn:hover { background: rgba(255, 255, 255, 0.6); border-color: #00a2ff; transform: translateY(-1px); }
         body.theme-frutiger .tab-btn.active { background: linear-gradient(180deg, #ffffff 0%, #e0f2fe 100%); color: #0284c7; border: 1px solid #00a2ff; box-shadow: 0 6px 16px rgba(0, 162, 255, 0.25), inset 0 1px 3px rgba(255,255,255,1); text-shadow: 0 0 1px rgba(0, 162, 255, 0.1); }
@@ -616,6 +616,7 @@
             } catch(e) { console.log("Audio trigger blocked."); }
         }
 
+        // DYNAMIC RENDERING LIFECYCLE FOR HQ OPERATIONS ENGINE
         function syncOperationsPipeline() {
             database.ref('marketplace/orders').on('value', snapshot => {
                 let grid = document.getElementById('opsGrid');
@@ -630,20 +631,59 @@
                 Object.keys(orders).reverse().forEach(key => {
                     let ord = orders[key];
                     let dateStr = new Date(ord.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    
                     let coordHtml = ord.shippingCoordinates 
                         ? `<p style="margin:4px 0; font-size:13px;">📍 <b>Routing target:</b> ${ord.shippingCoordinates.address}, ${ord.shippingCoordinates.city} (${ord.shippingCoordinates.pincode})</p>`
                         : `<p style="margin:4px 0; font-size:13px; color:#888;">🛒 In-store instant checkout collection transaction</p>`;
 
+                    let itemSummaryText = "";
+                    if (ord.purchasedItemsArray) {
+                        itemSummaryText = `<p style="margin:4px 0; font-size:12px; color:#aaa;">📦 <b>Basket Contents:</b> ${ord.purchasedItemsArray.map(i => i.title).join(', ')}</p>`;
+                    }
+
                     grid.innerHTML += `
-                        <div class="ops-order-card">
+                        <div class="ops-order-card" style="border-left: 4px solid #1a73e8;">
+                            <button class="delete-listing-btn" onclick="terminateAndRestockOrder('${key}')" title="Delete Order & Restock Inventory">✕</button>
+                            
                             <span class="ops-badge">${ord.chosenPayment || 'DIGITAL GATEWAY'}</span>
                             <h4 style="margin:0 0 10px 0; text-transform:uppercase; color:var(--primary); font-size:15px;">Order Context: ${ord.orderType}</h4>
                             <p style="margin:4px 0; font-size:13px;">👤 <b>Account Handle:</b> ${ord.buyerName.toUpperCase()} at [${dateStr}]</p>
                             ${ord.categoryPreset ? `<p style="margin:4px 0; font-size:13px;">🖥️ <b>Preset Profile Allocation:</b> ${ord.categoryPreset.toUpperCase()} layout</p>` : ''}
+                            ${itemSummaryText}
                             ${coordHtml}
-                            <div style="margin-top:12px; font-weight:bold; font-size:16px; color:var(--text);">Net Value: <span style="color:var(--primary)">₹${ord.invoiceCost.toLocaleString('en-IN')}</span></div>
+                            <div style="margin-top:12px; font-weight:bold; font-size:16px; color:var(--text); display:flex; justify-content:between; align-items:center;">
+                                <div>Net Value: <span style="color:var(--primary)">₹${ord.invoiceCost.toLocaleString('en-IN')}</span></div>
+                            </div>
                         </div>`;
                 });
+            });
+        }
+
+        // PURGE FUNCTION WITH INTELLIGENT AUTOMATED RESTOCK COUNTERS
+        function terminateAndRestockOrder(orderId) {
+            if (!confirm("Permanently wipe this order log and return purchased items back to store shelves?")) return;
+
+            database.ref(`marketplace/orders/${orderId}`).once('value', snapshot => {
+                let orderData = snapshot.val();
+                if (!orderData) return;
+
+                let updates = {};
+
+                if (orderData.purchasedItemsArray && Array.isArray(orderData.purchasedItemsArray)) {
+                    orderData.purchasedItemsArray.forEach(purchasedItem => {
+                        let currentMarketItem = marketItems.find(m => m.id === purchasedItem.itemId);
+                        if (currentMarketItem) {
+                            let updatedStockCount = (parseInt(currentMarketItem.stocks) || 0) + 1;
+                            updates[`marketplace/items/${purchasedItem.itemId}/stocks`] = updatedStockCount;
+                        }
+                    });
+                }
+
+                updates[`marketplace/orders/${orderId}`] = null;
+
+                database.ref().update(updates)
+                    .then(() => alert("💥 Order successfully wiped. Items returned to marketplace stock lines!"))
+                    .catch(err => alert("Pipeline Error: " + err.message));
             });
         }
 
@@ -881,16 +921,20 @@
             document.getElementById('cartTotalValue').innerText = "₹" + total.toLocaleString('en-IN');
         }
 
+        // RECONFIGURED CHECKOUT ENGINE TO TRACK HISTORICAL MATRICES
         function checkoutTerminal() {
             if(cart.length === 0) return;
             let updates = {};
             let orderId = "order_" + Date.now();
             
+            let itemsPayload = cart.map(c => ({ itemId: c.itemId, title: c.title }));
+
             let checkoutRecord = {
                 orderType: "Marketplace Checkout",
                 buyerName: currentUser,
                 invoiceCost: cart.reduce((acc, current) => acc + current.price, 0),
                 chosenPayment: "Direct UPI/Card Digital Gateway Connection",
+                purchasedItemsArray: itemsPayload, 
                 timestamp: Date.now()
             };
             updates[`marketplace/orders/${orderId}`] = checkoutRecord;
@@ -933,7 +977,6 @@
 
         function openSell() { if(!currentUser) return; document.getElementById('sellModal').style.display = 'flex'; }
 
-        // 💼 SUBMIT SIMPLIFIED APPLICATION PACKET TO BACKEND
         function submitJobApplication() {
             let role = document.getElementById('jobRole').value;
             let skills = document.getElementById('jobSkills').value.trim();
@@ -955,7 +998,6 @@
             }).catch(e => alert("Database Network Error: " + "machi" + e.message));
         }
 
-        // 📡 MONITOR SIMPLIFIED HR PIPELINE INTERFACE
         function syncHRApplications() {
             database.ref('marketplace/job_applications').on('value', snapshot => {
                 let hrGrid = document.getElementById('hrOpsGrid');
@@ -1027,7 +1069,6 @@
 
         function deleteMarketItem(id) { if(confirm("Strip entry?")) database.ref(`marketplace/items/${id}`).remove(); }
 
-        // 📡 MONITOR VAULT ARCHIVE CHANGES
         function listenToGameVault() {
             database.ref('marketplace/vault_games').on('value', snapshot => {
                 let grid = document.getElementById('vaultGameGrid');
@@ -1077,7 +1118,6 @@
             });
         }
 
-        // 💾 WRITE MODULE FOR DEVELOPER VAULT
         function submitGameToVault() {
             let title = document.getElementById('vaultGameName').value.trim();
             let url = document.getElementById('vaultGameUrl').value.trim();
