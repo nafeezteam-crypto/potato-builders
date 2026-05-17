@@ -21,7 +21,8 @@
             --radius: 24px;
             --font: 'Inter', sans-serif;
             --shadow: none;
-            --glow: none;
+            --backdrop: none;
+            --gradient-bg: none;
         }
         
         body.theme-minimalist {
@@ -33,46 +34,62 @@
             --radius: 12px;
             --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             --shadow: 0 4px 20px rgba(0,0,0,0.05);
-            --glow: none;
+            --backdrop: none;
+            --gradient-bg: none;
         }
 
-        body.theme-maximalist {
-            --primary: #ff007f;
-            --bg: #050014;
-            --card: #0d002d;
-            --text: #00ffff;
-            --border: #3d0082;
-            --radius: 0px;
-            --font: 'Impact', 'Arial Black', sans-serif;
-            --shadow: 0 0 15px rgba(255, 0, 127, 0.4);
-            --glow: 0 0 10px #ff007f, inset 0 0 10px #00ffff;
+        body.theme-frutiger {
+            --primary: #00a2ff;
+            --bg: #e0f2fe;
+            --card: rgba(255, 255, 255, 0.45);
+            --text: #0f172a;
+            --border: rgba(255, 255, 255, 0.6);
+            --radius: 20px;
+            --font: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --shadow: 0 8px 32px 0 rgba(0, 162, 255, 0.15), inset 0 1px 4px rgba(255,255,255,0.8);
+            --backdrop: blur(16px);
+            --gradient-bg: linear-gradient(135deg, #00f2fe 0%, #4facfe 40%, #00a2ff 70%, #38ef7d 100%);
         }
 
-        body { font-family: var(--font); background: var(--bg); color: var(--text); margin: 0; transition: all 0.4s ease; overflow-x: hidden; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); margin: 0; transition: all 0.4s ease; overflow-x: hidden; min-height: 100vh; }
+        
+        /* Frutiger Aero Vibrant Background Setup */
+        body.theme-frutiger::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--gradient-bg);
+            z-index: -1;
+            opacity: 0.85;
+        }
 
         /* THEME CONTROLLER INTERFACE */
-        .theme-selector-bar { display: flex; justify-content: center; gap: 8px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 30px; border: 1px solid var(--border); width: fit-content; margin: 80px auto 10px auto; position: relative; z-index: 100; }
+        .theme-selector-bar { display: flex; justify-content: center; gap: 8px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 30px; border: 1px solid var(--border); width: fit-content; margin: 80px auto 10px auto; position: relative; z-index: 100; backdrop-filter: var(--backdrop); }
+        body.theme-frutiger .theme-selector-bar { background: rgba(255, 255, 255, 0.3); box-shadow: var(--shadow); }
+        
         .theme-toggle-btn { background: transparent; border: none; color: var(--text); padding: 6px 16px; border-radius: 20px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
         .theme-toggle-btn.active { background: var(--primary); color: #fff; box-shadow: var(--shadow); }
-        body.theme-maximalist .theme-toggle-btn.active { color: #000; text-shadow: 0 0 5px #fff; background: #00ffff; }
+        body.theme-frutiger .theme-toggle-btn.active { background: linear-gradient(180deg, #56ccf2, #2f80ed); color: #fff; box-shadow: 0 4px 10px rgba(47, 128, 237, 0.3); text-shadow: 0 1px 2px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.4); }
 
         /* SECURITY TERMINAL LOGIN PASS GATE */
         .auth-gate { position: fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; }
-        .auth-card { background: var(--card); padding: 40px; border-radius: var(--radius); border: 1px solid var(--border); width: 100%; max-width: 360px; text-align: center; box-shadow: var(--shadow); box-shadow: var(--glow); }
+        body.theme-frutiger .auth-gate { background: var(--gradient-bg); }
+        .auth-card { background: var(--card); padding: 40px; border-radius: var(--radius); border: 1px solid var(--border); width: 100%; max-width: 360px; text-align: center; box-shadow: var(--shadow); backdrop-filter: var(--backdrop); }
 
         /* MAIN APPLICATION NAVIGATION BAR HEADER */
         .header { position: fixed; top: 0; width: 100%; height: 60px; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 1000; border-bottom: 1px solid var(--border); box-sizing: border-box; }
         body.theme-minimalist .header { background: rgba(255,255,255,0.8); backdrop-filter: blur(20px); }
-        body.theme-maximalist .header { background: #050014; border-bottom: 3px dashed #00ffff; }
+        body.theme-frutiger .header { background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.5); box-shadow: 0 2px 20px rgba(0,0,0,0.05); }
         .cart-trigger { cursor: pointer; position: relative; font-weight: 900; color: var(--primary); padding: 5px 10px; }
+        body.theme-frutiger .cart-trigger { color: #1d4ed8; }
         .cart-count { position: absolute; top: -5px; right: -8px; background: red; color: white; font-size: 10px; padding: 2px 6px; border-radius: 50%; font-weight: bold; }
 
         /* INTERACTION LAYOUT TABS */
         .tab-navigation { display: flex; justify-content: center; gap: 15px; margin-top: 10px; margin-bottom: 25px; position: relative; z-index: 50; }
-        .tab-btn { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 12px 30px; border-radius: var(--radius); font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; transition: 0.3s; box-shadow: var(--shadow); }
-        .tab-btn.active { border-color: var(--primary); color: var(--primary); background: rgba(1, 148, 11, 0.05); box-shadow: var(--glow); }
+        .tab-btn { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 12px 30px; border-radius: var(--radius); font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; transition: 0.3s; box-shadow: var(--shadow); backdrop-filter: var(--backdrop); }
+        .tab-btn.active { border-color: var(--primary); color: var(--primary); background: rgba(1, 148, 11, 0.05); }
         body.theme-minimalist .tab-btn.active { background: #000; color: #fff; }
-        body.theme-maximalist .tab-btn.active { background: #ff007f; color: #000; border: 2px solid #00ffff; }
+        body.theme-frutiger .tab-btn.active { background: linear-gradient(180deg, rgba(255,255,255,0.8), rgba(255,255,255,0.3)); color: #0284c7; border: 1px solid #00a2ff; box-shadow: 0 4px 15px rgba(0, 162, 255, 0.2); }
 
         /* CONTAINER VIEWS */
         .app-view { display: none; max-width: 900px; margin: 0 auto 40px auto; padding: 0 20px; box-sizing: border-box; }
@@ -80,94 +97,113 @@
 
         /* FILTER MENU ROW FOR MARKETPLACE */
         .market-filter-row { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .filter-chip { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 6px 16px; border-radius: 20px; font-size: 12px; cursor: pointer; font-weight: bold; }
+        .filter-chip { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 6px 16px; border-radius: 20px; font-size: 12px; cursor: pointer; font-weight: bold; backdrop-filter: var(--backdrop); box-shadow: var(--shadow); }
         .filter-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        body.theme-frutiger .filter-chip.active { background: linear-gradient(180deg, #00f2fe, #4facfe); border-color: #4facfe; color: white; }
 
         /* COMMAND SIDEBAR CONTROLLER */
-        .sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background: var(--card); border-right: 1px solid var(--border); transition: 0.4s; z-index: 2000; padding: 70px 20px; overflow-y: auto; box-sizing: border-box; visibility: hidden; }
+        .sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background: var(--card); border-right: 1px solid var(--border); transition: 0.4s; z-index: 2000; padding: 70px 20px; overflow-y: auto; box-sizing: border-box; visibility: hidden; backdrop-filter: var(--backdrop); }
         .sidebar.active { left: 0; visibility: visible; }
         .nav-item { padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; font-weight: bold; font-size: 13px; text-transform: uppercase; }
         .nav-item:hover { color: var(--primary); }
         .admin-only-nav { display: none; border-left: 3px solid #1a73e8; padding-left: 8px; color: #1a73e8; }
+        body.theme-frutiger .admin-only-nav { color: #1e3a8a; border-left-color: #0284c7; }
 
         /* PC BUILDER STEP SYSTEM WIZARD */
-        .wizard-container { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 35px; max-width: 600px; margin: 0 auto; box-sizing: border-box; box-shadow: var(--shadow); position: relative; }
-        body.theme-maximalist .wizard-container { border: 4px solid #ff007f; background: linear-gradient(145deg, #0d002d, #050014); animation: rgbGlow 4s infinite alternate; }
-        @keyframes rgbGlow { 0% { border-color: #ff007f; box-shadow: 0 0 10px #ff007f; } 100% { border-color: #00ffff; box-shadow: 0 0 25px #00ffff; } }
+        .wizard-container { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 35px; max-width: 600px; margin: 0 auto; box-sizing: border-box; box-shadow: var(--shadow); position: relative; backdrop-filter: var(--backdrop); }
         
         .wizard-step { display: none; }
         .wizard-step.active { display: block; }
         .wizard-nav-row { display: flex; justify-content: space-between; margin-top: 30px; gap: 10px; }
         .wiz-btn { background: #222; border: 1px solid #333; color: white; padding: 12px 24px; border-radius: var(--radius); font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        body.theme-frutiger .wiz-btn { background: rgba(255,255,255,0.5); color: #0f172a; border: 1px solid rgba(255,255,255,0.6); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .wiz-btn.next { background: var(--primary); border: none; }
         body.theme-minimalist .wiz-btn.next { background: #000; color: #fff; }
-        body.theme-maximalist .wiz-btn.next { background: #00ffff; color: #000; font-size: 16px; border: 2px solid #fff; }
+        body.theme-frutiger .wiz-btn.next { background: linear-gradient(180deg, #38ef7d, #11998e); color: white; border: 1px solid rgba(255,255,255,0.3); text-shadow: 0 1px 1px rgba(0,0,0,0.1); }
 
         .category-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
         @media (max-width: 450px) { .category-grid { grid-template-columns: 1fr; } }
         .category-card { background: rgba(0,0,0,0.2); border: 2px solid var(--border); border-radius: var(--radius); padding: 20px; text-align: center; cursor: pointer; font-weight: bold; transition: 0.2s; }
         body.theme-minimalist .category-card { background: #f5f5f7; }
-        .category-card.selected { border-color: var(--primary); background: rgba(1, 148, 11, 0.05); color: var(--primary); box-shadow: var(--glow); }
+        body.theme-frutiger .category-card { background: rgba(255,255,255,0.3); border-color: rgba(255,255,255,0.5); }
+        .category-card.selected { border-color: var(--primary); background: rgba(1, 148, 11, 0.05); color: var(--primary); }
         body.theme-minimalist .category-card.selected { background: #000; color: #fff; border-color: #000; }
-        body.theme-maximalist .category-card.selected { background: #ff007f; color: #fff; border-color: #00ffff; font-size: 20px; }
+        body.theme-frutiger .category-card.selected { background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(0, 162, 255, 0.15)); border-color: #00a2ff; color: #0284c7; box-shadow: 0 4px 15px rgba(0,162,255,0.1); }
 
         .spec-output-box { background: rgba(0,0,0,0.4); border: 1px solid var(--border); padding: 20px; border-radius: var(--radius); margin-top: 20px; }
         body.theme-minimalist .spec-output-box { background: #fafafa; }
+        body.theme-frutiger .spec-output-box { background: rgba(255,255,255,0.4); border-color: rgba(255,255,255,0.5); }
         .spec-line { padding: 8px 0; border-bottom: 1px dashed var(--border); font-size: 14px; }
+        
         .treasure-box { background: rgba(255, 215, 0, 0.02); border: 1px dashed #444; padding: 15px; border-radius: var(--radius); margin-top: 20px; display: flex; align-items: center; gap: 12px; }
+        body.theme-frutiger .treasure-box { background: rgba(255,255,255,0.3); border-color: rgba(255,255,255,0.6); }
         .treasure-box.unlocked { border-color: #ffd700; background: rgba(255, 215, 0, 0.05); }
+        body.theme-frutiger .treasure-box.unlocked { border-color: #eab308; background: rgba(234, 179, 8, 0.1); }
 
         /* USER INTERFACE CART DRAWER PANEL */
-        .cart-panel { position: fixed; top: 0; right: -350px; width: 320px; height: 100%; background: var(--card); border-left: 1px solid var(--border); transition: 0.4s; z-index: 2000; padding: 70px 20px 20px 20px; box-sizing: border-box; display: flex; flex-direction: column; visibility: hidden; }
+        .cart-panel { position: fixed; top: 0; right: -350px; width: 320px; height: 100%; background: var(--card); border-left: 1px solid var(--border); transition: 0.4s; z-index: 2000; padding: 70px 20px 20px 20px; box-sizing: border-box; display: flex; flex-direction: column; visibility: hidden; backdrop-filter: var(--backdrop); }
         .cart-panel.active { right: 0; visibility: visible; }
         .cart-header-title { font-size: 18px; font-weight: 900; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 15px; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
         .cart-items-container { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
         .cart-item-card { background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 12px; border-radius: 10px; position: relative; }
+        body.theme-frutiger .cart-item-card { background: rgba(255,255,255,0.4); border-color: rgba(255,255,255,0.5); }
         .remove-item-btn { position: absolute; top: 10px; right: 10px; background: none; border: none; color: #ff4444; cursor: pointer; font-weight: bold; }
         .cart-footer { border-top: 1px solid var(--border); padding-top: 15px; margin-top: 15px; }
         .checkout-btn { width: 100%; background: var(--primary); border: none; color: white; padding: 12px; border-radius: var(--radius); font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        body.theme-frutiger .checkout-btn { background: linear-gradient(180deg, #38ef7d, #11998e); box-shadow: 0 4px 12px rgba(17, 153, 142, 0.2); }
 
         /* MARKETPLACE GRID SYSTEM */
         .market-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
         .market-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .market-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.3s ease; position: relative; box-shadow: var(--shadow); }
-        .market-card:hover { border-color: var(--primary); box-shadow: var(--glow); transform: translateY(-2px); }
-        body.theme-maximalist .market-card { border: 2px solid #3d0082; background: #0d002d; }
+        .market-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.3s ease; position: relative; box-shadow: var(--shadow); backdrop-filter: var(--backdrop); }
+        .market-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+        body.theme-frutiger .market-card { border-color: rgba(255,255,255,0.5); }
+        body.theme-frutiger .market-card:hover { border-color: #00a2ff; box-shadow: 0 12px 40px rgba(0, 162, 255, 0.25); }
         .market-img-container { width: 100%; height: 160px; background: #222; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        body.theme-frutiger .market-img-container { background: rgba(255,255,255,0.2); border-bottom: 1px solid rgba(255,255,255,0.4); }
         .market-img { width: 100%; height: 100%; object-fit: cover; }
         .market-details { padding: 16px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
         .market-tag-container { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
         .market-tag { font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: bold; background: rgba(255,255,255,0.05); color: #aaa; }
         body.theme-minimalist .market-tag { background: #e5e5e7; color: #555; }
+        body.theme-frutiger .market-tag { background: rgba(255,255,255,0.6); color: #334155; }
         .market-tag.prime { background: rgba(1, 148, 11, 0.15); color: var(--primary); }
-        body.theme-maximalist .market-tag.prime { background: #ff007f; color: #fff; border: 1px solid #00ffff; }
+        body.theme-frutiger .market-tag.prime { background: rgba(0, 162, 255, 0.15); color: #0284c7; }
         
         .seller-thoughts-box { font-size: 12px; color: #888; font-style: italic; background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 6px; margin-bottom: 12px; border-left: 2px solid var(--primary); }
+        body.theme-frutiger .seller-thoughts-box { background: rgba(255,255,255,0.5); color: #475569; border-left-color: #00a2ff; }
         .market-action-row { display: flex; gap: 8px; }
         .chat-seller-btn { display: flex; align-items: center; justify-content: center; background: #1a73e8; color: white; border: none; padding: 8px; border-radius: 6px; font-weight: bold; font-size: 13px; flex: 1; cursor: pointer; }
+        body.theme-frutiger .chat-seller-btn { background: linear-gradient(180deg, #60a5fa, #2563eb); }
         .delete-listing-btn { position: absolute; top: 10px; right: 10px; background: rgba(255, 0, 0, 0.85); color: white; border: none; width: 28px; height: 28px; border-radius: 50%; font-weight: bold; cursor: pointer; z-index: 10; }
 
         /* LIVE ORDER OPS TRACKING PANELS */
         .ops-grid { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
-        .ops-order-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; position: relative; }
+        .ops-order-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; position: relative; backdrop-filter: var(--backdrop); box-shadow: var(--shadow); }
         .ops-badge { position: absolute; top: 20px; right: 20px; background: rgba(26, 115, 232, 0.15); color: #1a73e8; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
 
         /* POST MODAL INPUT POPUPS */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 3000; justify-content: center; align-items: center; }
-        .modal-content { background: var(--card); width: 90%; max-width: 440px; padding: 30px; border-radius: var(--radius); border: 1px solid var(--primary); max-height: 90vh; overflow-y: auto; box-sizing: border-box; text-align: left; }
+        body.theme-frutiger .modal { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); }
+        .modal-content { background: var(--card); width: 90%; max-width: 440px; padding: 30px; border-radius: var(--radius); border: 1px solid var(--primary); max-height: 90vh; overflow-y: auto; box-sizing: border-box; text-align: left; backdrop-filter: var(--backdrop); box-shadow: var(--shadow); }
+        body.theme-frutiger .modal-content { border-color: rgba(255,255,255,0.6); }
         .modal-content label { font-size: 11px; color: #888; display: block; margin-bottom: 6px; font-weight: bold; text-transform: uppercase; }
+        body.theme-frutiger .modal-content label { color: #475569; }
         input, select, textarea { width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid var(--border); color: var(--text); border-radius: 8px; margin-bottom: 16px; box-sizing: border-box; font-size: 14px; font-family: inherit; }
         body.theme-minimalist input, body.theme-minimalist select, body.theme-minimalist textarea { background: #fff; color: #000; border-color: #ccc; }
+        body.theme-frutiger input, body.theme-frutiger select, body.theme-frutiger textarea { background: rgba(255,255,255,0.7); color: #0f172a; border-color: rgba(255,255,255,0.8); }
 
         /* REALTIME MESSAGING DRAWER BOX */
-        .dm-box { display: none; position: fixed; bottom: 20px; right: 20px; width: 360px; height: 480px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); z-index: 4000; flex-direction: column; overflow: hidden; }
+        .dm-box { display: none; position: fixed; bottom: 20px; right: 20px; width: 360px; height: 480px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); z-index: 4000; flex-direction: column; overflow: hidden; backdrop-filter: var(--backdrop); }
         .dm-header { background: #1a73e8; color: white; padding: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
         body.theme-minimalist .dm-header { background: #000; }
-        body.theme-maximalist .dm-header { background: #ff007f; border-bottom: 2px solid #00ffff; }
+        body.theme-frutiger .dm-header { background: linear-gradient(90deg, #4facfe, #00a2ff); color: white; }
         .dm-logs { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; font-size: 13px; }
         .dm-input-area { display: flex; border-top: 1px solid var(--border); background: rgba(0,0,0,0.5); }
+        body.theme-frutiger .dm-input-area { background: rgba(255,255,255,0.4); border-top-color: rgba(255,255,255,0.5); }
         .dm-input-area input { margin: 0; border: none; border-radius: 0; background: transparent; padding: 15px; color: var(--text); flex: 1; }
         .dm-input-area button { background: #1a73e8; border: none; color: white; padding: 0 20px; cursor: pointer; font-weight: bold; }
+        body.theme-frutiger .dm-input-area button { background: #00a2ff; }
     </style>
 </head>
 <body>
@@ -195,13 +231,14 @@
     <div class="theme-selector-bar">
         <button class="theme-toggle-btn active" id="theme-btn-matrix" onclick="applyCorporateTheme('matrix')">📟 Matrix</button>
         <button class="theme-toggle-btn" id="theme-btn-minimalist" onclick="applyCorporateTheme('minimalist')">🕊️ Minimalist</button>
-        <button class="theme-toggle-btn" id="theme-btn-maximalist" onclick="applyCorporateTheme('maximalist')">🧬 Maximalist</button>
+        <button class="theme-toggle-btn" id="theme-btn-frutiger" onclick="applyCorporateTheme('frutiger')">🌊 Frutiger Aero</button>
     </div>
 
     <div class="sidebar" id="sidebar">
         <div class="nav-item" onclick="switchTab('marketView')">🛒 Browse Store</div>
         <div class="nav-item" onclick="switchTab('buildView')">🖥️ Strategic Configurator</div>
-        <div class="nav-item" onclick="switchTab('gameVaultView')">🕹️ Game Vault</div> <div class="nav-item" onclick="openSell()">⚙️ Appraise & Sell Gear</div>
+        <div class="nav-item" onclick="switchTab('gameVaultView')">🕹️ Game Vault</div>
+        <div class="nav-item" onclick="openSell()">⚙️ Appraise & Sell Gear</div>
         <div class="nav-item admin-only-nav" id="adminSidebarLink" onclick="switchTab('opsView')">📊 Live Order Pipeline</div>
     </div>
 
@@ -339,36 +376,36 @@
 
     <div class="app-view" id="gameVaultView">
         <div class="market-header">
-            <h2 style="text-transform: uppercase; margin: 0; font-size: 24px; color: #ffd700; font-style: italic;">🕹️ Arcade Game Vault</h2>
+            <h2 style="text-transform: uppercase; margin: 0; font-size: 24px; color: #0284c7; font-style: italic;">🕹️ Arcade Game Vault</h2>
         </div>
-        <p style="font-size: 13px; color: #888; margin-bottom: 25px;">Download exclusive custom game builds, updates, and HTML5 psychological horror projects deployed by the developer.</p>
+        <p style="font-size: 13px; color: #64748b; margin-bottom: 25px;">Download premium custom game builds, updates, and standalone projects directly from the developer network.</p>
 
-<div id="developerGameConsole" style="display: none; background: rgba(255, 215, 0, 0.03); border: 1px dashed #ffd700; padding: 25px; border-radius: var(--radius); margin-bottom: 30px;">
-    <h4 style="margin-top:0; color:#ffd700; text-transform:uppercase; font-size:14px; letter-spacing:1px;">🚀 Developer Cloud Upload Engine</h4>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-        <div>
-            <label>Game Title / Build Name</label>
-            <input type="text" id="vaultGameName" placeholder="e.g., Silent Shadow: Level 1-5">
+        <div id="developerGameConsole" style="display: none; background: rgba(0, 162, 255, 0.05); border: 1px dashed #00a2ff; padding: 25px; border-radius: var(--radius); margin-bottom: 30px; backdrop-filter: var(--backdrop);">
+            <h4 style="margin-top:0; color:#0284c7; text-transform:uppercase; font-size:14px; letter-spacing:1px;">🚀 Developer Cloud Upload Engine</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                <div>
+                    <label>Game Title / Build Name</label>
+                    <input type="text" id="vaultGameName" placeholder="e.g., Silent Shadow: Level 1-5">
+                </div>
+                <div>
+                    <label>File Target Link (Drive / Itch.io)</label>
+                    <input type="url" id="vaultGameUrl" placeholder="https://drive.google.com/...">
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                    <label>Game Price (Set 0 for Free Build)</label>
+                    <input type="number" id="vaultGamePrice" placeholder="Price (₹)" value="0">
+                </div>
+                <div>
+                    <label>Game Cover Image URL</label>
+                    <input type="url" id="vaultGameImg" placeholder="Paste image web address URL">
+                </div>
+            </div>
+            <label>Patch Notes / Gameplay Description</label>
+            <textarea id="vaultGameDesc" placeholder="Write level constraints, control mappings, or jumpscare features..." rows="2"></textarea>
+            <button onclick="submitGameToVault()" style="background:#00a2ff; color:#fff; border:none; padding:12px 24px; border-radius:8px; font-weight:bold; cursor:pointer; text-transform:uppercase; font-size:12px; box-shadow: 0 4px 10px rgba(0,162,255,0.2);">Deploy Title to Archive</button>
         </div>
-        <div>
-            <label>File Target Link (Drive / Itch.io)</label>
-            <input type="url" id="vaultGameUrl" placeholder="https://drive.google.com/...">
-        </div>
-    </div>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-        <div>
-            <label>Game Price (Set 0 for Free Build)</label>
-            <input type="number" id="vaultGamePrice" placeholder="Price (₹)" value="0">
-        </div>
-        <div>
-            <label>Game Cover Image URL</label>
-            <input type="url" id="vaultGameImg" placeholder="Paste image web address URL">
-        </div>
-    </div>
-    <label>Patch Notes / Gameplay Description</label>
-    <textarea id="vaultGameDesc" placeholder="Write level constraints, control mappings, or jumpscare features..." rows="2"></textarea>
-    <button onclick="submitGameToVault()" style="background:#ffd700; color:#000; border:none; padding:12px 24px; border-radius:8px; font-weight:bold; cursor:pointer; text-transform:uppercase; font-size:12px;">Deploy Title to Archive</button>
-</div>
 
         <div class="market-grid" id="vaultGameGrid">
             <div style="text-align:center; color:#555; padding:40px; grid-column: 1/-1;">Syncing secure game deployment streams...</div>
@@ -441,7 +478,6 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // ACCREDITED CORPORATE ROLE MAP NODES
         const localAccounts = {
             "nafeez": "1234",
             "admin": "potato2026",
@@ -485,20 +521,18 @@
             document.getElementById('userDisplayTag').innerText = `USER: ${username.toUpperCase()}`;
             
             listenToMarketplace();
-            listenToGameVault(); // Start tracking game vault entries
+            listenToGameVault();
             selectCategory('gaming');
             
             let savedTheme = localStorage.getItem('potato_terminal_theme') || 'matrix';
             applyCorporateTheme(savedTheme);
 
-            // EVALUATE GAME CONSOLE VISIBILITY (Nafeez & Admin get the dashboard)
             if (username === 'nafeez' || username === 'admin') {
                 document.getElementById('developerGameConsole').style.display = 'block';
             } else {
                 document.getElementById('developerGameConsole').style.display = 'none';
             }
 
-            // EVALUATE HIGH LEVEL ACCESS PRIVILEGES FOR OPERATIONS
             if (username === 'nafeez' || username === 'admin' || username === 'opsmanager') {
                 document.querySelectorAll('.admin-only-nav').forEach(el => el.style.display = 'block');
                 activateAdminOrderListener();
@@ -509,7 +543,7 @@
         }
 
         function activateAdminOrderListener() {
-            console.log("📡 Admin Order Tracking Stream Active with Audio Context...");
+            console.log("📡 Admin Order Tracking Stream Active...");
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
             database.ref('marketplace/orders').on('child_added', (snapshot) => {
@@ -537,7 +571,7 @@
                 gain.connect(ctx.destination);
                 osc.start();
                 osc.stop(ctx.currentTime + duration);
-            } catch(e) { console.log("Audio trigger pending interaction block."); }
+            } catch(e) { console.log("Audio trigger blocked."); }
         }
 
         function syncOperationsPipeline() {
@@ -700,7 +734,7 @@
             } else if (selectedCategoryNode === 'school') {
                 out = `<div class="spec-line"><b>CPU:</b> Efficient Quad-Core Low Thermal Processor</div><div class="spec-line"><b>GPU:</b> Integrated High Definition System Graphics</div><div class="spec-line"><b>RAM:</b> 8GB or 16GB Stable Office Array</div>`;
             } else if (selectedCategoryNode === 'modelling') {
-                out = `<div class="spec-line"><b>CPU:</b> High Clock Speed Multi-Thread Node</div><div class="spec-line"><b>GPU:</b> Nvidia CUDA Architecture Array (Optimal VRAM Configuration)</div><div class="spec-line"><b>RAM:</b> 32GB Heavy Mesh Memory Arrays</div>`;
+                out = `<div class="spec-line"><b>CPU:</b> High Clock Speed Multi-Thread Node</div><div class="spec-line"><b>GPU:</b> Nvidia CUDA Architecture Array</div><div class="spec-line"><b>RAM:</b> 32GB Heavy Mesh Memory Arrays</div>`;
             }
             targetArea.innerHTML = out + `<div class="spec-line" style="color:var(--primary)"><b>Storage:</b> NVMe High Speed OS Drive Added</div>`;
         }
@@ -731,14 +765,14 @@
                 buyerName: currentUser,
                 allocatedBudget: activeSelectedBudget,
                 categoryPreset: selectedCategoryNode,
-                chosenPayment: "Direct UPI/Card Integration",
+                chosenPayment: "Direct UPI/Card Digital Gateway Connection",
                 invoiceCost: finalCost,
                 shippingCoordinates: { address: addr, city: city, state: state, pincode: pin },
                 timestamp: Date.now()
             };
 
             database.ref('marketplace/orders').push(payload).then(() => {
-                alert("🛠️ Rebuilt Custom PC order deployed and piped directly into database nodes!");
+                alert("🛠️ Rebuilt Custom PC order deployed successfully!");
                 changeWizardStep(1);
                 switchTab('marketView');
             }).catch(e => alert("Network Error: " + e.message));
@@ -825,7 +859,7 @@
             });
             
             database.ref().update(updates).then(() => { 
-                alert("Transaction Processed Successfully! Digital asset nodes secured."); 
+                alert("Transaction Processed Successfully!"); 
                 cart = []; 
                 updateCartUI(); 
                 toggleCart(); 
@@ -892,91 +926,63 @@
 
         function deleteMarketItem(id) { if(confirm("Strip entry?")) database.ref(`marketplace/items/${id}`).remove(); }
 
-// 📡 MONITOR VAULT ARCHIVE CHANGES (ANONYMOUS PRESETS)
-function listenToGameVault() {
-    database.ref('marketplace/vault_games').on('value', snapshot => {
-        let grid = document.getElementById('vaultGameGrid');
-        grid.innerHTML = "";
-        let games = snapshot.val();
+        // 📡 MONITOR VAULT ARCHIVE CHANGES (ANONYMOUS CODES)
+        function listenToGameVault() {
+            database.ref('marketplace/vault_games').on('value', snapshot => {
+                let grid = document.getElementById('vaultGameGrid');
+                grid.innerHTML = "";
+                let games = snapshot.val();
 
-        if (!games) {
-            grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#555; padding:40px;">No digital titles uploaded to this directory yet.</div>`;
-            return;
+                if (!games) {
+                    grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#555; padding:40px;">No digital titles uploaded to this directory yet.</div>`;
+                    return;
+                }
+
+                Object.keys(games).reverse().forEach(key => {
+                    let game = games[key];
+                    let devKillBtn = (currentUser === 'nafeez' || currentUser === 'admin') 
+                        ? `<button class="delete-listing-btn" onclick="deleteGameFromVault('${key}')">✖</button>` 
+                        : "";
+                    
+                    let imgSource = game.imageUrl ? game.imageUrl : "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=500";
+                    let displayPrice = (parseInt(game.price) === 0 || !game.price) ? "FREE BUILD" : `₹${parseInt(game.price).toLocaleString('en-IN')}`;
+
+                    grid.innerHTML += `
+                        <div class="market-card" style="border: 1px dashed #00a2ff;">
+                            ${devKillBtn}
+                            <div class="market-img-container" style="height: 130px;">
+                                <img src="${imgSource}" class="market-img" onerror="this.src='https://images.unsplash.com/photo-1542751371-adc38448a05e?w=500'">
+                            </div>
+                            <div class="market-details" style="padding: 20px; min-height: 160px;">
+                                <div>
+                                    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                                        <h3 style="margin:0 0 8px 0; color:#0284c7; font-style:italic;">🎮 ${game.title.toUpperCase()}</h3>
+                                        <span style="font-size:11px; color:#0284c7; font-weight:bold; letter-spacing:0.5px;">${displayPrice}</span>
+                                    </div>
+                                    <p style="font-size:12px; color:#475569; line-height:1.5; margin-bottom:15px; background:rgba(255,255,255,0.4); padding:10px; border-left:2px solid #00a2ff; border-radius:4px;">
+                                        ${game.description || 'No build logs provided by the creator.'}
+                                    </p>
+                                </div>
+                                <div style="display:flex; justify-content:flex-end; align-items:center; margin-top:auto;">
+                                    <a href="${game.downloadUrl}" target="_blank" style="text-decoration:none;">
+                                        <button style="background:linear-gradient(180deg, #60a5fa, #2563eb); color:#fff; border:none; padding:10px 16px; border-radius:6px; font-weight:900; cursor:pointer; font-size:12px;">
+                                            📥 DOWNLOAD BUILD
+                                        </button>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>`;
+                });
+            });
         }
 
-        Object.keys(games).reverse().forEach(key => {
-            let game = games[key];
-            let devKillBtn = (currentUser === 'nafeez' || currentUser === 'admin') 
-                ? `<button class="delete-listing-btn" onclick="deleteGameFromVault('${key}')">✖</button>` 
-                : "";
-            
-            // Set default background image if custom photo isn't supplied
-            let imgSource = game.imageUrl ? game.imageUrl : "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=500";
-            let displayPrice = (parseInt(game.price) === 0 || !game.price) ? "FREE BUILD" : `₹${parseInt(game.price).toLocaleString('en-IN')}`;
-
-            grid.innerHTML += `
-                <div class="market-card" style="border: 1px dashed #ffd700; background: linear-gradient(145deg, #101010, #050505);">
-                    ${devKillBtn}
-                    <div class="market-img-container" style="height: 130px;">
-                        <img src="${imgSource}" class="market-img" onerror="this.src='https://images.unsplash.com/photo-1542751371-adc38448a05e?w=500'">
-                    </div>
-                    <div class="market-details" style="padding: 20px; min-height: 160px;">
-                        <div>
-                            <div style="display:flex; justify-content:space-between; align-items:baseline;">
-                                <h3 style="margin:0 0 8px 0; color:#ffd700; font-style:italic;">🎮 ${game.title.toUpperCase()}</h3>
-                                <span style="font-size:11px; color:#ffd700; font-weight:bold; letter-spacing:0.5px;">${displayPrice}</span>
-                            </div>
-                            <p style="font-size:12px; color:#aaa; line-height:1.5; margin-bottom:15px; background:rgba(255,255,255,0.02); padding:10px; border-left:2px solid #ffd700; border-radius:4px;">
-                                ${game.description || 'No build logs provided by the creator.'}
-                            </p>
-                        </div>
-                        <div style="display:flex; justify-content:flex-end; align-items:center; margin-top:auto;">
-                            <a href="${game.downloadUrl}" target="_blank" style="text-decoration:none;">
-                                <button style="background:#ffd700; color:#000; border:none; padding:10px 16px; border-radius:6px; font-weight:900; cursor:pointer; font-size:12px;">
-                                    📥 DOWNLOAD BUILD
-                                </button>
-                            </a>
-                        </div>
-                    </div>
-                </div>`;
-        });
-    });
-}
-
-// 💾 WRITE MODULE WITH NEW EXTENDED METADATA
-function submitGameToVault() {
-    let title = document.getElementById('vaultGameName').value.trim();
-    let url = document.getElementById('vaultGameUrl').value.trim();
-    let desc = document.getElementById('vaultGameDesc').value.trim();
-    let price = document.getElementById('vaultGamePrice').value.trim();
-    let img = document.getElementById('vaultGameImg').value.trim();
-
-    if (!title || !url) { alert("Game Title and File Target Link are required nodes!"); return; }
-    if (currentUser !== 'nafeez' && currentUser !== 'admin') { alert("Security Exception: Access Denied."); return; }
-
-    database.ref('marketplace/vault_games').push({
-        title: title,
-        downloadUrl: url,
-        description: desc,
-        price: price ? parseInt(price) : 0,
-        imageUrl: img,
-        uploader: currentUser, // Stored safely inside backend metadata array, but hidden from public layout cards
-        timestamp: Date.now()
-    }).then(() => {
-        document.getElementById('vaultGameName').value = "";
-        document.getElementById('vaultGameUrl').value = "";
-        document.getElementById('vaultGameDesc').value = "";
-        document.getElementById('vaultGamePrice').value = "0";
-        document.getElementById('vaultGameImg').value = "";
-        alert("🕹️ Title packaged and written to live Arcade Vault stream parameters successfully!");
-    }).catch(e => alert("Database Error: " + e.message));
-}
-
-        // 💾 WRITE MODULE: ADD GAME TO ARCHIVE
+        // 💾 WRITE MODULE WITH NEW EXTENDED METADATA
         function submitGameToVault() {
             let title = document.getElementById('vaultGameName').value.trim();
             let url = document.getElementById('vaultGameUrl').value.trim();
             let desc = document.getElementById('vaultGameDesc').value.trim();
+            let price = document.getElementById('vaultGamePrice').value.trim();
+            let img = document.getElementById('vaultGameImg').value.trim();
 
             if (!title || !url) { alert("Game Title and File Target Link are required nodes!"); return; }
             if (currentUser !== 'nafeez' && currentUser !== 'admin') { alert("Security Exception: Access Denied."); return; }
@@ -985,21 +991,24 @@ function submitGameToVault() {
                 title: title,
                 downloadUrl: url,
                 description: desc,
-                uploader: currentUser,
+                price: price ? parseInt(price) : 0,
+                imageUrl: img,
+                uploader: currentUser, 
                 timestamp: Date.now()
             }).then(() => {
                 document.getElementById('vaultGameName').value = "";
                 document.getElementById('vaultGameUrl').value = "";
                 document.getElementById('vaultGameDesc').value = "";
-                alert("🕹️ Title packaged and written to live Arcade Vault stream parameters successfully!");
+                document.getElementById('vaultGamePrice').value = "0";
+                document.getElementById('vaultGameImg').value = "";
+                alert("🕹️ Title packaged and written to live Arcade Vault successfully!");
             }).catch(e => alert("Database Error: " + e.message));
         }
 
-        // 🔨 DESTROY MODULE: REMOVE GAME ENTRY VIA ID
         function deleteGameFromVault(id) {
             if (confirm("Are you sure you want to purge this game build from the active database?")) {
                 database.ref(`marketplace/vault_games/${id}`).remove()
-                    .then(() => alert("Entry stripped from archive array logs."));
+                    .then(() => alert("Entry stripped from archive logs."));
             }
         }
     </script>
