@@ -9,30 +9,71 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
     <style>
+        /* 🎨 THEME ROOT DEFINITIONS */
+        /* Default Matrix Style */
         :root { 
             --primary: #01940b; 
             --bg: #0b0b0b; 
             --card: #151515; 
             --text: #eee; 
             --border: #222; 
-            --chat-bg: #111;
+            --radius: 24px;
+            --font: 'Inter', sans-serif;
+            --shadow: none;
+            --glow: none;
         }
         
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; transition: 0.3s; overflow-x: hidden; }
+        /* Premium Minimalist Style (Clean, White, Apple-esque) */
+        body.theme-minimalist {
+            --primary: #000000;
+            --bg: #f5f5f7;
+            --card: #ffffff;
+            --text: #1d1d1f;
+            --border: #e5e5e7;
+            --radius: 12px;
+            --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --shadow: 0 4px 20px rgba(0,0,0,0.05);
+            --glow: none;
+        }
+
+        /* Insane Maximalist Style (Cyberpunk, RGB, Neon Glow Overload) */
+        body.theme-maximalist {
+            --primary: #ff007f;
+            --bg: #050014;
+            --card: #0d002d;
+            --text: #00ffff;
+            --border: #3d0082;
+            --radius: 0px;
+            --font: 'Impact', 'Arial Black', sans-serif;
+            --shadow: 0 0 15px rgba(255, 0, 127, 0.4);
+            --glow: 0 0 10px #ff007f, inset 0 0 10px #00ffff;
+        }
+
+        body { font-family: var(--font); background: var(--bg); color: var(--text); margin: 0; transition: all 0.4s ease; overflow-x: hidden; }
+
+        /* THEME TOGGLE SWITCH CONTAINER */
+        .theme-selector-bar { display: flex; justify-content: center; gap: 8px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 30px; border: 1px solid var(--border); width: fit-content; margin: 80px auto 10px auto; }
+        .theme-toggle-btn { background: transparent; border: none; color: var(--text); padding: 6px 16px; border-radius: 20px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
+        .theme-toggle-btn.active { background: var(--primary); color: #fff; box-shadow: var(--shadow); }
+        body.theme-maximalist .theme-toggle-btn.active { color: #000; text-shadow: 0 0 5px #fff; background: #00ffff; }
 
         /* AUTH GATE SYSTEM */
         .auth-gate { position: fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; }
-        .auth-card { background: var(--card); padding: 40px; border-radius: 24px; border: 1px solid var(--border); width: 100%; max-width: 360px; text-align: center; }
+        .auth-card { background: var(--card); padding: 40px; border-radius: var(--radius); border: 1px solid var(--border); width: 100%; max-width: 360px; text-align: center; box-shadow: var(--shadow); box-shadow: var(--glow); }
 
         /* HEADER & NAVIGATION */
         .header { position: fixed; top: 0; width: 100%; height: 60px; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 1000; border-bottom: 1px solid var(--border); box-sizing: border-box; }
+        body.theme-minimalist .header { background: rgba(255,255,255,0.8); backdrop-filter: blur(20px); }
+        body.theme-maximalist .header { background: #050014; border-bottom: 3px dashed #00ffff; }
         .cart-trigger { cursor: pointer; position: relative; font-weight: 900; color: var(--primary); padding: 5px 10px; }
         .cart-count { position: absolute; top: -5px; right: -8px; background: red; color: white; font-size: 10px; padding: 2px 6px; border-radius: 50%; font-weight: bold; }
 
         /* TAB CONTROLLER */
-        .tab-navigation { display: flex; justify-content: center; gap: 15px; margin-top: 90px; margin-bottom: 25px; position: relative; z-index: 50; }
-        .tab-btn { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 12px 30px; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; transition: 0.2s; }
-        .tab-btn.active { border-color: var(--primary); color: var(--primary); background: rgba(1, 148, 11, 0.05); }
+        .tab-navigation { display: flex; justify-content: center; gap: 15px; margin-top: 10px; margin-bottom: 25px; position: relative; z-index: 50; }
+        .tab-btn { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 12px 30px; border-radius: var(--radius); font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; transition: 0.3s; box-shadow: var(--shadow); }
+        .tab-btn.active { border-color: var(--primary); color: var(--primary); background: rgba(1, 148, 11, 0.05); box-shadow: var(--glow); }
+        body.theme-minimalist .tab-btn.active { background: #000; color: #fff; }
+        body.theme-maximalist .tab-btn.active { background: #ff007f; color: #000; border: 2px solid #00ffff; }
 
         /* VIEW PANEL VIEWS */
         .app-view { display: none; max-width: 900px; margin: 0 auto 40px auto; padding: 0 20px; box-sizing: border-box; }
@@ -44,19 +85,30 @@
         .nav-item { padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; font-weight: bold; font-size: 13px; text-transform: uppercase; }
 
         /* STEP WIZARD BUILDER GRAPHICS */
-        .wizard-container { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 35px; max-width: 600px; margin: 0 auto; box-sizing: border-box; }
+        .wizard-container { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 35px; max-width: 600px; margin: 0 auto; box-sizing: border-box; box-shadow: var(--shadow); position: relative; }
+        body.theme-maximalist .wizard-container { border: 4px solid #ff007f; background: linear-gradient(145deg, #0d002d, #050014); animation: rgbGlow 4s infinite alternate; }
+        @keyframes rgbGlow { 0% { border-color: #ff007f; box-shadow: 0 0 10px #ff007f; } 100% { border-color: #00ffff; box-shadow: 0 0 25px #00ffff; } }
+        
         .wizard-step { display: none; }
         .wizard-step.active { display: block; }
         .wizard-nav-row { display: flex; justify-content: space-between; margin-top: 30px; gap: 10px; }
-        .wiz-btn { background: #222; border: 1px solid #333; color: white; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        .wiz-btn { background: #222; border: 1px solid #333; color: white; padding: 12px 24px; border-radius: var(--radius); font-weight: bold; cursor: pointer; text-transform: uppercase; }
         .wiz-btn.next { background: var(--primary); border: none; }
+        body.theme-minimalist .wiz-btn.next { background: #000; color: #fff; }
+        body.theme-maximalist .wiz-btn.next { background: #00ffff; color: #000; font-size: 16px; border: 2px solid #fff; }
+
         .category-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
         @media (max-width: 450px) { .category-grid { grid-template-columns: 1fr; } }
-        .category-card { background: #000; border: 2px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .category-card.selected { border-color: var(--primary); background: rgba(1, 148, 11, 0.05); color: var(--primary); }
-        .spec-output-box { background: #000; border: 1px solid var(--border); padding: 20px; border-radius: 12px; margin-top: 20px; }
-        .spec-line { padding: 8px 0; border-bottom: 1px dashed #222; font-size: 14px; }
-        .treasure-box { background: rgba(255, 215, 0, 0.02); border: 1px dashed #444; padding: 15px; border-radius: 12px; margin-top: 20px; display: flex; align-items: center; gap: 12px; }
+        .category-card { background: rgba(0,0,0,0.2); border: 2px solid var(--border); border-radius: var(--radius); padding: 20px; text-align: center; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        body.theme-minimalist .category-card { background: #f5f5f7; }
+        .category-card.selected { border-color: var(--primary); background: rgba(1, 148, 11, 0.05); color: var(--primary); box-shadow: var(--glow); }
+        body.theme-minimalist .category-card.selected { background: #000; color: #fff; border-color: #000; }
+        body.theme-maximalist .category-card.selected { background: #ff007f; color: #fff; border-color: #00ffff; font-size: 20px; }
+
+        .spec-output-box { background: rgba(0,0,0,0.4); border: 1px solid var(--border); padding: 20px; border-radius: var(--radius); margin-top: 20px; }
+        body.theme-minimalist .spec-output-box { background: #fafafa; }
+        .spec-line { padding: 8px 0; border-bottom: 1px dashed var(--border); font-size: 14px; }
+        .treasure-box { background: rgba(255, 215, 0, 0.02); border: 1px dashed #444; padding: 15px; border-radius: var(--radius); margin-top: 20px; display: flex; align-items: center; gap: 12px; }
         .treasure-box.unlocked { border-color: #ffd700; background: rgba(255, 215, 0, 0.05); }
 
         /* CART PANEL */
@@ -67,19 +119,22 @@
         .cart-item-card { background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 12px; border-radius: 10px; position: relative; }
         .remove-item-btn { position: absolute; top: 10px; right: 10px; background: none; border: none; color: #ff4444; cursor: pointer; font-weight: bold; }
         .cart-footer { border-top: 1px solid var(--border); padding-top: 15px; margin-top: 15px; }
-        .checkout-btn { width: 100%; background: var(--primary); border: none; color: white; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        .checkout-btn { width: 100%; background: var(--primary); border: none; color: white; padding: 12px; border-radius: var(--radius); font-weight: bold; cursor: pointer; text-transform: uppercase; }
 
         /* MARKETPLACE SECTIONS */
         .market-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
         .market-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .market-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; transition: 0.2s; position: relative; }
-        .market-card:hover { border-color: var(--primary); }
+        .market-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.3s ease; position: relative; box-shadow: var(--shadow); }
+        .market-card:hover { border-color: var(--primary); box-shadow: var(--glow); transform: translateY(-2px); }
+        body.theme-maximalist .market-card { border: 2px solid #3d0082; background: #0d002d; }
         .market-img-container { width: 100%; height: 160px; background: #222; overflow: hidden; display: flex; align-items: center; justify-content: center; }
         .market-img { width: 100%; height: 100%; object-fit: cover; }
         .market-details { padding: 16px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
         .market-tag-container { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
         .market-tag { font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: bold; background: rgba(255,255,255,0.05); color: #aaa; }
+        body.theme-minimalist .market-tag { background: #e5e5e7; color: #555; }
         .market-tag.prime { background: rgba(1, 148, 11, 0.15); color: var(--primary); }
+        body.theme-maximalist .market-tag.prime { background: #ff007f; color: #fff; }
         .market-item-name { font-size: 16px; font-weight: bold; margin: 0; }
         .market-item-price { font-size: 18px; font-weight: 900; color: var(--primary); margin: 8px 0; }
         
@@ -90,16 +145,19 @@
 
         /* MODALS */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 3000; justify-content: center; align-items: center; }
-        .modal-content { background: var(--card); width: 90%; max-width: 440px; padding: 30px; border-radius: 25px; border: 1px solid var(--primary); max-height: 90vh; overflow-y: auto; box-sizing: border-box; text-align: left; }
+        .modal-content { background: var(--card); width: 90%; max-width: 440px; padding: 30px; border-radius: var(--radius); border: 1px solid var(--primary); max-height: 90vh; overflow-y: auto; box-sizing: border-box; text-align: left; }
         .modal-content label { font-size: 11px; color: #888; display: block; margin-bottom: 6px; font-weight: bold; text-transform: uppercase; }
-        input, select, textarea { width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: #fff; border-radius: 8px; margin-bottom: 16px; box-sizing: border-box; font-size: 14px; font-family: inherit; }
+        input, select, textarea { width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid var(--border); color: var(--text); border-radius: 8px; margin-bottom: 16px; box-sizing: border-box; font-size: 14px; font-family: inherit; }
+        body.theme-minimalist input, body.theme-minimalist select, body.theme-minimalist textarea { background: #fff; color: #000; border-color: #ccc; }
 
         /* CHAT SYSTEMS */
-        .dm-box { display: none; position: fixed; bottom: 20px; right: 20px; width: 360px; height: 480px; background: var(--chat-bg); border: 1px solid var(--border); border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); z-index: 4000; flex-direction: column; overflow: hidden; }
+        .dm-box { display: none; position: fixed; bottom: 20px; right: 20px; width: 360px; height: 480px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); z-index: 4000; flex-direction: column; overflow: hidden; }
         .dm-header { background: #1a73e8; color: white; padding: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        body.theme-minimalist .dm-header { background: #000; }
+        body.theme-maximalist .dm-header { background: #ff007f; border-bottom: 2px solid #00ffff; }
         .dm-logs { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; font-size: 13px; }
-        .dm-input-area { display: flex; border-top: 1px solid var(--border); background: #000; }
-        .dm-input-area input { margin: 0; border: none; border-radius: 0; background: transparent; padding: 15px; color: white; flex: 1; }
+        .dm-input-area { display: flex; border-top: 1px solid var(--border); background: rgba(0,0,0,0.5); }
+        .dm-input-area input { margin: 0; border: none; border-radius: 0; background: transparent; padding: 15px; color: var(--text); flex: 1; }
         .dm-input-area button { background: #1a73e8; border: none; color: white; padding: 0 20px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
@@ -123,6 +181,12 @@
             <div onclick="logoutTerminal()" style="cursor:pointer; font-size: 11px; font-weight: bold; color: #ff4444;">🚪 EXIT</div>
             <div class="cart-trigger" onclick="toggleCart()">🛒 <span class="cart-count" id="cartCount">0</span></div>
         </div>
+    </div>
+
+    <div class="theme-selector-bar">
+        <button class="theme-toggle-btn active" id="theme-btn-matrix" onclick="applyCorporateTheme('matrix')">📟 Matrix</button>
+        <button class="theme-toggle-btn" id="theme-btn-minimalist" onclick="applyCorporateTheme('minimalist')">🕊️ Minimalist</button>
+        <button class="theme-toggle-btn" id="theme-btn-maximalist" onclick="applyCorporateTheme('maximalist')">🧬 Maximalist</button>
     </div>
 
     <div class="sidebar" id="sidebar">
@@ -156,6 +220,11 @@
             <h2 style="text-transform: uppercase; margin: 0; font-size: 24px;">Matrix Marketplace</h2>
             <button onclick="openSell()" style="background:var(--primary); color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:bold; cursor:pointer; text-transform:uppercase; font-size:12px;">+ Post an Ad</button>
         </div>
+
+        <div id="terminal-ad-slot" style="background:rgba(0,0,0,0.3); border:1px dashed var(--primary); border-radius:12px; min-height:90px; margin-bottom:25px; display:flex; align-items:center; justify-content:center; color:#666; font-size:11px; text-transform:uppercase; letter-spacing:1px;">
+            📡 Console Stream: Awaiting Ad Network Script Deployment Node...
+        </div>
+
         <div class="market-grid" id="marketGrid"></div>
     </div>
 
@@ -166,7 +235,7 @@
                 <h3 style="text-transform: uppercase; color: var(--primary); margin-top: 0;">Step 1: Set Target Budget</h3>
                 <p style="font-size: 13px; color: #777;">Drag the tracker node or write your precise budget capacity allocation limits.</p>
                 
-                <div style="font-size: 44px; font-weight: 900; color: white; text-align: center; margin: 20px 0;">
+                <div style="font-size: 44px; font-weight: 900; color: var(--text); text-align: center; margin: 20px 0;">
                     ₹<span id="wizPriceDisplay">15,000</span>
                 </div>
                 <input type="range" id="wizBudgetSlider" min="15000" max="400000" step="1000" value="15000" oninput="syncBudgetInputs('slider')">
@@ -211,7 +280,7 @@
                     <option value="upi">Unified Payments Interface (UPI) / Cards</option>
                 </select>
 
-                <div id="upiPaymentFields" style="display: none; background:#000; padding:15px; border-radius:12px; border:1px solid #222; margin-bottom:15px;">
+                <div id="upiPaymentFields" style="display: none; background:rgba(0,0,0,0.2); padding:15px; border-radius:12px; border:1px solid var(--border); margin-bottom:15px;">
                     <label>Select UPI Stream Method</label>
                     <select id="upiProvider">
                         <option value="gpay">Google Pay (GPay Direct Link)</option>
@@ -347,6 +416,20 @@
         let selectedCategoryNode = 'gaming';
         let activeSelectedBudget = 15000;
 
+        // 🌗 VISUAL THEME CONTROLLER ENGINE
+        function applyCorporateTheme(themeName) {
+            document.body.className = ""; // Wipe current setup
+            document.querySelectorAll('.theme-toggle-btn').forEach(btn => btn.classList.remove('active'));
+            
+            if (themeName !== 'matrix') {
+                document.body.classList.add('theme-' + themeName);
+            }
+            document.getElementById('theme-btn-' + themeName).classList.add('active');
+            
+            // Save settings locally
+            localStorage.setItem('potato_terminal_theme', themeName);
+        }
+
         function handleTerminalLogin() {
             let user = document.getElementById('authUsername').value.trim().toLowerCase();
             let pass = document.getElementById('authPassword').value.trim();
@@ -365,6 +448,10 @@
             document.getElementById('userDisplayTag').innerText = `USER: ${username.toUpperCase()}`;
             listenToMarketplace();
             selectCategory('gaming');
+            
+            // Re-apply saved user theme preferences
+            let savedTheme = localStorage.getItem('potato_terminal_theme') || 'matrix';
+            applyCorporateTheme(savedTheme);
         }
 
         function logoutTerminal() {
@@ -391,7 +478,7 @@
             if(document.getElementById('sidebar').classList.contains('active')) toggleSidebar();
         }
 
-        // FIXED RANGE SYNC ENGINE
+        // RANGE BUDGET SYNC ENGINE
         function syncBudgetInputs(source) {
             let slider = document.getElementById('wizBudgetSlider');
             let manual = document.getElementById('wizBudgetManual');
@@ -416,14 +503,11 @@
             document.getElementById('wizStep' + stepNum).classList.add('active');
         }
 
-        // STEP 3 ROUTER: RUNS CLOUD PURCHASE VERIFICATION BEFORE ENABLING TREASURE COINS
         function goToStep3() {
             changeWizardStep(3);
             calculateFinalWizardPrice();
-            
             if (!currentUser) return;
 
-            // Reset UI state to checking
             let tBox = document.getElementById('treasureContainer');
             let tCheckbox = document.getElementById('useTreasureCheckbox');
             let tTitle = document.getElementById('treasureTitle');
@@ -436,7 +520,6 @@
             tTitle.style.color = "#666";
             tDesc.innerText = "Searching system nodes for completed marketplace transactions...";
 
-            // Query previous orders to see if this user has bought before
             database.ref('marketplace/orders').once('value', snapshot => {
                 let orders = snapshot.val();
                 let hasPurchased = false;
@@ -450,7 +533,6 @@
                 }
 
                 if (hasPurchased) {
-                    // Unlock the gold treasure mechanics
                     tCheckbox.disabled = false;
                     tBox.classList.add('unlocked');
                     tTitle.innerText = "✨ Treasure Coins Active!";
@@ -458,7 +540,6 @@
                     tDesc.innerText = "Verified Customer! 200 coins checked. Apply code to slash ₹100 (Max ₹500 discount)";
                     tDesc.style.color = "#aaa";
                 } else {
-                    // Restrict usage
                     tCheckbox.disabled = true;
                     tTitle.innerText = "🔒 Treasure Locked";
                     tTitle.style.color = "#ff4444";
@@ -605,7 +686,6 @@
             let updates = {};
             let orderId = "order_" + Date.now();
             
-            // Record checkout in orders list so they become an eligible customer
             let checkoutRecord = {
                 orderType: "Marketplace Checkout",
                 buyerName: currentUser,
@@ -636,8 +716,8 @@
                 let logs = document.getElementById('dmLogs'); logs.innerHTML = ""; let msgs = snapshot.val();
                 if(msgs) {
                     Object.keys(msgs).forEach(k => {
-                        let m = msgs[k]; let align = m.senderName === currentUser ? 'align-self:flex-end; background:var(--primary);' : 'align-self:flex-start; background:#222;';
-                        logs.innerHTML += `<div style="padding:10px 14px; border-radius:12px; margin-bottom:6px; max-width:80%; ${align} color:white;"><b>${m.senderName.toUpperCase()}:</b> ${m.msgText}</div>`;
+                        let m = msgs[k]; let align = m.senderName === currentUser ? 'align-self:flex-end; background:var(--primary);' : 'align-self:flex-start; background:rgba(0,0,0,0.3);';
+                        logs.innerHTML += `<div style="padding:10px 14px; border-radius:12px; margin-bottom:6px; max-width:80%; ${align} color:var(--text);"><b>${m.senderName.toUpperCase()}:</b> ${m.msgText}</div>`;
                     });
                 }
                 logs.scrollTop = logs.scrollHeight;
