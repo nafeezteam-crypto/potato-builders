@@ -524,9 +524,9 @@
                 return;
             }
 
-            // 1. First check if it's an admin/hardcoded local account
-            if (typeof localAccounts !== 'undefined' && localAccounts[userField]) {
-                if (localAccounts[userField].password === passField) {
+            // 1. STRICT ADMIN CHECK: Only force local check if it's the core system admins
+            if (userField === 'nafeez' || userField === 'admin' || userField === 'opsmanager') {
+                if (typeof localAccounts !== 'undefined' && localAccounts[userField] && localAccounts[userField].password === passField) {
                     loginSuccess(userField);
                     return;
                 } else {
@@ -534,6 +534,23 @@
                     return;
                 }
             }
+
+            // 2. FOR ALL OTHER ACCOUNTS: Query the dynamic Firebase database roster
+            database.ref(`marketplace/users/${userField}`).once('value', snapshot => {
+                let dbUser = snapshot.val();
+                
+                if (dbUser && dbUser.password === passField) {
+                    // Firebase entry found and PIN matches perfectly!
+                    loginSuccess(userField);
+                } else {
+                    // No database entry found, or PIN is incorrect
+                    alert("ACCESS DENIED: Credentials not found in active squad array.");
+                }
+            }).catch(error => {
+                console.error("Auth Matrix Interruption:", error);
+                alert("System connection error during authorization verification.");
+            });
+        }
 
             // 2. If it's not a local account, check the Firebase dynamic squad registry
             database.ref(`marketplace/users/${userField}`).once('value', snapshot => {
