@@ -3,617 +3,871 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Potato_Builders // Terminal Management Suite</title>
+    <title>Potato Builders | Authorized PC Marketplace</title>
     
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <link rel="manifest" href="manifest.json">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
     <style>
-        :root {
-            --glass-bg: rgba(10, 25, 50, 0.5);
-            --glass-border: rgba(0, 150, 255, 0.2);
-            --neon-blue: #0096ff;
-            --neon-glow: 0 0 15px rgba(0, 150, 255, 0.6);
-            --text-main: #e0f2fe;
+        /* 🎨 SYSTEM DESIGN GRAPHIC PROFILES */
+        :root { 
+            --primary: #01940b; 
+            --bg: #0b0b0b; 
+            --card: #151515; 
+            --text: #eee; 
+            --border: #222; 
+            --radius: 24px;
+            --font: 'Inter', sans-serif;
+            --shadow: none;
+            --backdrop: none;
+            --gradient-bg: none;
+        }
+        
+        body.theme-minimalist {
+            --primary: #000000;
+            --bg: #f5f5f7;
+            --card: #ffffff;
+            --text: #1d1d1f;
+            --border: #e5e5e7;
+            --radius: 12px;
+            --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --shadow: 0 4px 20px rgba(0,0,0,0.05);
+            --backdrop: none;
+            --gradient-bg: none;
         }
 
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: radial-gradient(circle at center, #0a1128 0%, #020617 100%);
-            color: var(--text-main);
-            min-height: 100vh;
-            overflow-x: hidden;
+        body.theme-frutiger {
+            --primary: #00a2ff;
+            --bg: #e0f2fe;
+            --card: rgba(255, 255, 255, 0.45);
+            --text: #0f172a;
+            --border: rgba(255, 255, 255, 0.6);
+            --radius: 20px;
+            --font: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --shadow: 0 8px 32px 0 rgba(0, 162, 255, 0.15), inset 0 1px 4px rgba(255,255,255,0.8);
+            --backdrop: blur(25px) saturate(160%);
+            --gradient-bg: linear-gradient(135deg, #00f2fe 0%, #4facfe 40%, #00a2ff 70%, #38ef7d 100%);
         }
 
-        /* Aero-Glass Global Header */
-        header {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--glass-border);
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .brand-title {
-            font-size: 20px;
-            font-weight: bold;
-            letter-spacing: 2px;
-            color: #fff;
-            text-shadow: var(--neon-glow);
-        }
-
-        nav button {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--glass-border);
-            color: var(--text-main);
-            padding: 8px 16px;
-            margin-left: 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 600;
-        }
-
-        nav button:hover, nav button.active {
-            background: var(--neon-blue);
-            color: #000;
-            box-shadow: var(--neon-glow);
-            border-color: #fff;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 30px auto;
-            padding: 0 20px;
-        }
-
-        /* View Management Layout */
-        .view-panel {
-            display: none;
-            background: var(--glass-bg);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            padding: 30px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
-
-        .view-panel.active {
-            display: block;
-        }
-
-        h2 {
-            margin-top: 0;
-            border-bottom: 2px solid var(--glass-border);
-            padding-bottom: 10px;
-            letter-spacing: 1px;
-        }
-
-        /* Optimization Panel UI Specifics */
-        .flex-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-        }
-
-        @media (max-width: 768px) {
-            .flex-grid { grid-template-columns: 1fr; }
-        }
-
-        .control-box, .output-box {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            padding: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            font-size: 14px;
-            text-transform: uppercase;
-            color: #93c5fd;
-        }
-
-        input[type="range"], select, input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            background: #0f172a;
-            border: 1px solid var(--glass-border);
-            color: #fff;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            box-sizing: border-box;
-        }
-
-        input[type="text"]:focus {
-            outline: none;
-            border-color: var(--neon-blue);
-            box-shadow: var(--neon-glow);
-        }
-
-        .budget-display {
-            font-size: 28px;
-            font-weight: bold;
-            color: #fff;
-            text-shadow: var(--neon-glow);
-            margin-bottom: 15px;
-        }
-
-        /* Meter System Layout */
-        .meter-container {
-            background: #020617;
-            border: 1px solid #1e293b;
-            border-radius: 6px;
-            height: 24px;
-            position: relative;
-            overflow: hidden;
-            margin-bottom: 15px;
-        }
-
-        .meter-fill {
-            height: 100%;
-            width: 50%;
-            background: var(--neon-blue);
-            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease;
-        }
-
-        .meter-text {
-            position: absolute;
+        body { font-family: var(--font); background: var(--bg); color: var(--text); margin: 0; transition: all 0.4s ease; overflow-x: hidden; min-height: 100vh; }
+        
+        /* Frutiger Aero Vibrant Background Setup */
+        body.theme-frutiger::before {
+            content: "";
+            position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 11px; font-weight: bold; color: #fff;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+            background: var(--gradient-bg);
+            z-index: -1;
+            opacity: 0.85;
         }
 
-        /* Build Specs Cards */
-        .spec-item {
-            display: flex;
-            justify-content: space-between;
-            background: rgba(255,255,255,0.02);
-            border: 1px solid rgba(255,255,255,0.05);
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 8px;
-        }
+        /* THEME CONTROLLER INTERFACE */
+        .theme-selector-bar { display: flex; justify-content: center; gap: 8px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 30px; border: 1px solid var(--border); width: fit-content; margin: 80px auto 10px auto; position: relative; z-index: 100; backdrop-filter: var(--backdrop); }
+        body.theme-frutiger .theme-selector-bar { background: rgba(255, 255, 255, 0.3); box-shadow: var(--shadow); }
+        
+        .theme-toggle-btn { background: transparent; border: none; color: var(--text); padding: 6px 16px; border-radius: 20px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
+        .theme-toggle-btn.active { background: var(--primary); color: #fff; box-shadow: var(--shadow); }
+        body.theme-frutiger .theme-toggle-btn.active { background: linear-gradient(180deg, #56ccf2, #2f80ed); color: #fff; box-shadow: 0 4px 10px rgba(47, 128, 237, 0.3); text-shadow: 0 1px 2px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.4); }
 
-        .spec-label { color: #94a3b8; font-size: 13px; }
-        .spec-value { color: #fff; font-weight: 600; font-size: 14px; }
+        /* SECURITY TERMINAL LOGIN PASS GATE */
+        .auth-gate { position: fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        body.theme-frutiger .auth-gate { background: var(--gradient-bg); }
+        .auth-card { background: var(--card); padding: 40px; border-radius: var(--radius); border: 1px solid var(--border); width: 100%; max-width: 360px; text-align: center; box-shadow: var(--shadow); backdrop-filter: var(--backdrop); }
 
-        /* Marketplace Cards Structure */
-        .market-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
+        /* MAIN APPLICATION NAVIGATION BAR HEADER */
+        .header { position: fixed; top: 0; width: 100%; height: 60px; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 1000; border-bottom: 1px solid var(--border); box-sizing: border-box; }
+        body.theme-minimalist .header { background: rgba(255,255,255,0.8); backdrop-filter: blur(20px); }
+        body.theme-frutiger .header { background: rgba(255, 255, 255, 0.45); backdrop-filter: blur(25px) saturate(160%); -webkit-backdrop-filter: blur(25px) saturate(160%); border-bottom: 1px solid rgba(255, 255, 255, 0.6); box-shadow: 0 4px 30px rgba(0, 162, 255, 0.08), inset 0 1px 0 rgba(255,255,255,0.5); }
+        .cart-trigger { cursor: pointer; position: relative; font-weight: 900; color: var(--primary); padding: 5px 10px; }
+        body.theme-frutiger .cart-trigger { color: #1d4ed8; }
+        .cart-count { position: absolute; top: -5px; right: -8px; background: red; color: white; font-size: 10px; padding: 2px 6px; border-radius: 50%; font-weight: bold; }
 
-        .market-card {
-            background: rgba(15, 23, 42, 0.4);
-            border: 1px solid var(--glass-border);
-            border-radius: 10px;
-            padding: 15px;
-            text-align: center;
-            transition: transform 0.2s ease;
-        }
+        /* INTERACTION LAYOUT TABS */
+        .tab-navigation { display: flex; justify-content: center; gap: 15px; margin-top: 10px; margin-bottom: 25px; position: relative; z-index: 50; }
+        .tab-btn { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 12px 30px; border-radius: var(--radius); font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; transition: 0.3s; box-shadow: var(--shadow); backdrop-filter: var(--backdrop); }
+        .tab-btn.active { border-color: var(--primary); color: var(--primary); background: rgba(1, 148, 11, 0.05); }
+        body.theme-minimalist .tab-btn.active { background: #000; color: #fff; border-color: #000; }
+        body.theme-frutiger .tab-btn { background: rgba(255, 255, 255, 0.3); border: 1px solid rgba(255, 255, 255, 0.5); color: #0f172a; padding: 10px 22px; border-radius: 30px; font-size: 12px; font-weight: 700; letter-spacing: 0.3px; white-space: nowrap; box-shadow: 0 2px 10px rgba(0,0,0,0.02), inset 0 1px 2px rgba(255,255,255,0.6); transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+        body.theme-frutiger .tab-btn:hover { background: rgba(255, 255, 255, 0.6); border-color: #00a2ff; transform: translateY(-1px); }
+        body.theme-frutiger .tab-btn.active { background: linear-gradient(180deg, #ffffff 0%, #e0f2fe 100%); color: #0284c7; border: 1px solid #00a2ff; box-shadow: 0 6px 16px rgba(0, 162, 255, 0.25), inset 0 1px 3px rgba(255,255,255,1); text-shadow: 0 0 1px rgba(0, 162, 255, 0.1); }
 
-        .market-card:hover {
-            transform: translateY(-4px);
-            border-color: var(--neon-blue);
-        }
+        /* CONTAINER VIEWS */
+        .app-view { display: none; max-width: 900px; margin: 0 auto 40px auto; padding: 0 20px; box-sizing: border-box; }
+        .app-view.active { display: block; }
 
-        .market-card img {
-            width: 100%;
-            height: 130px;
-            object-fit: cover;
-            border-radius: 6px;
-            background: #020617;
-        }
+        /* FILTER MENU ROW FOR MARKETPLACE */
+        .market-filter-row { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .filter-chip { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 6px 16px; border-radius: 20px; font-size: 12px; cursor: pointer; font-weight: bold; backdrop-filter: var(--backdrop); box-shadow: var(--shadow); }
+        .filter-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        body.theme-frutiger .filter-chip.active { background: linear-gradient(180deg, #00f2fe, #4facfe); border-color: #4facfe; color: white; }
 
-        .market-card h3 { margin: 10px 0 5px; font-size: 16px; }
-        .market-card p { margin: 0 0 12px; color: var(--neon-blue); font-weight: bold; }
+        /* COMMAND SIDEBAR CONTROLLER */
+        .sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background: var(--card); border-right: 1px solid var(--border); transition: 0.4s; z-index: 2000; padding: 70px 20px; overflow-y: auto; box-sizing: border-box; visibility: hidden; backdrop-filter: var(--backdrop); }
+        .sidebar.active { left: 0; visibility: visible; }
+        .nav-item { padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; font-weight: bold; font-size: 13px; text-transform: uppercase; }
+        .nav-item:hover { color: var(--primary); }
+        .admin-only-nav { display: none; border-left: 3px solid #1a73e8; padding-left: 8px; color: #1a73e8; }
+        body.theme-frutiger .admin-only-nav { color: #1e3a8a; border-left-color: #0284c7; }
 
-        .btn-action {
-            width: 100%;
-            background: var(--neon-blue);
-            color: #000;
-            border: none;
-            padding: 10px;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            text-transform: uppercase;
-            font-size: 12px;
-        }
+        /* PC BUILDER STEP SYSTEM WIZARD */
+        .wizard-container { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 35px; max-width: 600px; margin: 0 auto; box-sizing: border-box; box-shadow: var(--shadow); position: relative; backdrop-filter: var(--backdrop); }
+        .wizard-step { display: none; }
+        .wizard-step.active { display: block; }
+        .wizard-nav-row { display: flex; justify-content: space-between; margin-top: 30px; gap: 10px; }
+        .wiz-btn { background: #222; border: 1px solid #333; color: white; padding: 12px 24px; border-radius: var(--radius); font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        body.theme-frutiger .wiz-btn { background: rgba(255,255,255,0.5); color: #0f172a; border: 1px solid rgba(255,255,255,0.6); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .wiz-btn.next { background: var(--primary); border: none; }
+        body.theme-minimalist .wiz-btn.next { background: #000; color: #fff; }
+        body.theme-frutiger .wiz-btn.next { background: linear-gradient(180deg, #38ef7d, #11998e); color: white; border: 1px solid rgba(255,255,255,0.3); text-shadow: 0 1px 1px rgba(0,0,0,0.1); }
 
-        .btn-action:hover {
-            box-shadow: var(--neon-glow);
-            background: #fff;
-        }
+        .category-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        @media (max-width: 450px) { .category-grid { grid-template-columns: 1fr; } }
+        .category-card { background: rgba(0,0,0,0.2); border: 2px solid var(--border); border-radius: var(--radius); padding: 20px; text-align: center; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        body.theme-minimalist .category-card { background: #f5f5f7; }
+        body.theme-frutiger .category-card { background: rgba(255,255,255,0.3); border-color: rgba(255,255,255,0.5); }
+        .category-card.selected { border-color: var(--primary); background: rgba(1, 148, 11, 0.05); color: var(--primary); }
+        body.theme-minimalist .category-card.selected { background: #000; color: #fff; border-color: #000; }
+        body.theme-frutiger .category-card.selected { background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(0, 162, 255, 0.15)); border-color: #00a2ff; color: #0284c7; box-shadow: 0 4px 15px rgba(0,162,255,0.1); }
 
-        /* Cart Floating Layout */
-        .cart-dropdown {
-            background: rgba(2, 6, 23, 0.95);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-    </script>
+        .spec-output-box { background: rgba(0,0,0,0.4); border: 1px solid var(--border); padding: 20px; border-radius: var(--radius); margin-top: 20px; }
+        body.theme-minimalist .spec-output-box { background: #fafafa; }
+        body.theme-frutiger .spec-output-box { background: rgba(255,255,255,0.4); border-color: rgba(255,255,255,0.5); }
+        .spec-line { padding: 8px 0; border-bottom: 1px dashed var(--border); font-size: 14px; }
+        
+        .treasure-box { background: rgba(255, 215, 0, 0.02); border: 1px dashed #444; padding: 15px; border-radius: var(--radius); margin-top: 20px; display: flex; align-items: center; gap: 12px; }
+        body.theme-frutiger .treasure-box { background: rgba(255,255,255,0.3); border-color: rgba(255,255,255,0.6); }
+        .treasure-box.unlocked { border-color: #ffd700; background: rgba(255, 215, 0, 0.05); }
+        body.theme-frutiger .treasure-box.unlocked { border-color: #eab308; background: rgba(234, 179, 8, 0.1); }
+
+        /* USER INTERFACE CART DRAWER PANEL */
+        .cart-panel { position: fixed; top: 0; right: -350px; width: 320px; height: 100%; background: var(--card); border-left: 1px solid var(--border); transition: 0.4s; z-index: 2000; padding: 70px 20px 20px 20px; box-sizing: border-box; display: flex; flex-direction: column; visibility: hidden; backdrop-filter: var(--backdrop); }
+        .cart-panel.active { right: 0; visibility: visible; }
+        .cart-header-title { font-size: 18px; font-weight: 900; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 15px; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
+        .cart-items-container { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .cart-item-card { background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 12px; border-radius: 10px; position: relative; }
+        body.theme-frutiger .cart-item-card { background: rgba(255,255,255,0.4); border-color: rgba(255,255,255,0.5); }
+        .remove-item-btn { position: absolute; top: 10px; right: 10px; background: none; border: none; color: #ff4444; cursor: pointer; font-weight: bold; }
+        .cart-footer { border-top: 1px solid var(--border); padding-top: 15px; margin-top: 15px; }
+        .checkout-btn { width: 100%; background: var(--primary); border: none; color: white; padding: 12px; border-radius: var(--radius); font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        body.theme-frutiger .checkout-btn { background: linear-gradient(180deg, #38ef7d, #11998e); box-shadow: 0 4px 12px rgba(17, 153, 142, 0.2); }
+
+        /* MARKETPLACE GRID SYSTEM */
+        .market-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .market-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .market-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.3s ease; position: relative; box-shadow: var(--shadow); backdrop-filter: var(--backdrop); }
+        .market-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+        body.theme-frutiger .market-card { border-color: rgba(255,255,255,0.5); }
+        body.theme-frutiger .market-card:hover { border-color: #00a2ff; box-shadow: 0 12px 40px rgba(0, 162, 255, 0.25); }
+        .market-img-container { width: 100%; height: 160px; background: #222; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        body.theme-frutiger .market-img-container { background: rgba(255,255,255,0.2); border-bottom: 1px solid rgba(255,255,255,0.4); }
+        .market-img { width: 100%; height: 100%; object-fit: cover; }
+        .market-details { padding: 16px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .market-action-row { display: flex; gap: 8px; margin-top: 10px; }
+        .chat-seller-btn { display: flex; align-items: center; justify-content: center; background: #1a73e8; color: white; border: none; padding: 8px; border-radius: 6px; font-weight: bold; font-size: 13px; flex: 1; cursor: pointer; }
+        body.theme-frutiger .chat-seller-btn { background: linear-gradient(180deg, #60a5fa, #2563eb); }
+        .delete-listing-btn { position: absolute; top: 10px; right: 10px; background: rgba(255, 0, 0, 0.85); color: white; border: none; width: 28px; height: 28px; border-radius: 50%; font-weight: bold; cursor: pointer; z-index: 10; }
+        .market-tag-container { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+        .market-tag { font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: bold; background: rgba(255,255,255,0.05); color: #aaa; }
+        body.theme-minimalist .market-tag { background: #e5e5e7; color: #555; }
+        body.theme-frutiger .market-tag { background: rgba(255,255,255,0.6); color: #334155; }
+        .market-tag.prime { background: rgba(1, 148, 11, 0.15); color: var(--primary); }
+        body.theme-frutiger .market-tag.prime { background: rgba(0, 162, 255, 0.15); color: #0284c7; }
+        .seller-thoughts-box { font-size: 12px; color: #888; font-style: italic; background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 6px; margin-bottom: 12px; border-left: 2px solid var(--primary); }
+        body.theme-frutiger .seller-thoughts-box { background: rgba(255,255,255,0.5); color: #475569; border-left-color: #00a2ff; }
+
+        /* LIVE ORDER OPS TRACKING PANELS */
+        .ops-grid { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
+        .ops-order-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; position: relative; backdrop-filter: var(--backdrop); box-shadow: var(--shadow); }
+        .ops-badge { position: absolute; top: 20px; right: 20px; background: rgba(26, 115, 232, 0.15); color: #1a73e8; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+
+        /* POST MODAL INPUT POPUPS */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 3000; justify-content: center; align-items: center; }
+        body.theme-frutiger .modal { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); }
+        .modal-content { background: var(--card); width: 90%; max-width: 440px; padding: 30px; border-radius: var(--radius); border: 1px solid var(--primary); max-height: 90vh; overflow-y: auto; box-sizing: border-box; text-align: left; backdrop-filter: var(--backdrop); box-shadow: var(--shadow); }
+        body.theme-frutiger .modal-content { border-color: rgba(255,255,255,0.6); }
+        input, select, textarea { width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid var(--border); color: var(--text); border-radius: 8px; margin-bottom: 16px; box-sizing: border-box; font-size: 14px; font-family: inherit; }
+        body.theme-minimalist input, body.theme-minimalist select, body.theme-minimalist textarea { background: #fff; color: #000; border-color: #ccc; }
+        body.theme-frutiger input, body.theme-frutiger select, body.theme-frutiger textarea { background: rgba(255,255,255,0.7); color: #0f172a; border-color: rgba(255,255,255,0.8); }
+
+        /* REALTIME MESSAGING DRAWER BOX */
+        .dm-box { display: none; position: fixed; bottom: 20px; right: 20px; width: 360px; height: 480px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); z-index: 4000; flex-direction: column; overflow: hidden; backdrop-filter: var(--backdrop); }
+        .dm-header { background: #1a73e8; color: white; padding: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        body.theme-minimalist .dm-header { background: #000; }
+        body.theme-frutiger .dm-header { background: linear-gradient(90deg, #4facfe, #00a2ff); color: white; }
+        .dm-logs { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; font-size: 13px; }
+        .dm-input-area { display: flex; border-top: 1px solid var(--border); background: rgba(0,0,0,0.5); }
+        .dm-input-area input { margin: 0; border: none; border-radius: 0; background: transparent; padding: 15px; color: var(--text); flex: 1; }
+        .dm-input-area button { background: #1a73e8; border: none; color: white; padding: 0 20px; cursor: pointer; font-weight: bold; }
+    </style>
 </head>
 <body>
 
-    <header>
-        <div class="brand-title">POTATO_BUILDERS // OS</div>
-        <nav>
-            <button onclick="switchView('optimization-tab')" id="nav-optimization-tab" class="active">Optimization Engine</button>
-            <button onclick="switchView('marketplace-tab')" id="nav-marketplace-tab">Marketplace Hardware</button>
-        </nav>
-    </header>
+    <div class="auth-gate" id="authGate">
+        <div class="auth-card">
+            <h2 style="text-transform: uppercase; margin-bottom: 10px; color: var(--primary);">Terminal Log</h2>
+            <p style="font-size: 12px; color: #666; margin-bottom: 25px;">Enter your assigned handle credentials to bypass system security.</p>
+            <input type="text" id="authUsername" placeholder="Enter Username">
+            <input type="password" id="authPassword" placeholder="Enter Password">
+            <button onclick="handleTerminalLogin()" style="background:var(--primary); color:white; border:none; padding:14px; width:100%; border-radius:8px; font-weight:bold; cursor:pointer; text-transform:uppercase;">Connect Terminal</button>
+        </div>
+    </div>
 
-    <div class="container">
+    <div class="header">
+        <div onclick="toggleSidebar()" style="cursor:pointer; font-size: 24px; padding: 5px 10px;">☰</div>
+        <div style="display: flex; align-items: center; gap: 10px; font-weight: 900; letter-spacing: -1px;">
+            <div style="width: 26px; height: 26px; background: var(--primary); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 13px; font-family: monospace; font-weight: bold;">LB</div>
+            <span>LBPC <span style="color:var(--primary)">TERMINAL</span></span>
+        </div>
+        <div style="display:flex; gap:20px; align-items:center;">
+            <div id="userDisplayTag" style="font-size:11px; color:#666;">Not Logged In</div>
+            <div onclick="logoutTerminal()" style="cursor:pointer; font-size: 11px; font-weight: bold; color: #ff4444;">🚪 EXIT</div>
+            <div class="cart-trigger" onclick="toggleCart()">🛒 <span class="cart-count" id="cartCount">0</span></div>
+        </div>
+    </div>
 
-        <section id="optimization-tab" class="view-panel active">
-            <h2>Hardware Scaler & Optimization Framework</h2>
-            <div class="flex-grid">
-                
-                <div class="control-box">
-                    <label for="budget-slider">Target Budget Allocation (INR)</label>
-                    <div class="budget-display" id="budget-val">₹30,000</div>
-                    <input type="range" id="budget-slider" min="30000" max="100000" step="1000" value="30000" oninput="runOptimizationEngine()">
+    <div class="theme-selector-bar">
+        <button class="theme-toggle-btn active" id="theme-btn-matrix" onclick="applyCorporateTheme('matrix')">📟 Matrix</button>
+        <button class="theme-toggle-btn" id="theme-btn-minimalist" onclick="applyCorporateTheme('minimalist')">🕊️ Minimalist</button>
+        <button class="theme-toggle-btn" id="theme-btn-frutiger" onclick="applyCorporateTheme('frutiger')">🌊 Frutiger Aero</button>
+    </div>
 
-                    <label for="role-select">Target Workload Profile</label>
-                    <select id="role-select" onchange="runOptimizationEngine()">
-                        <option value="Gaming">Gaming / High FPS Focus</option>
-                        <option value="Editing">Editing / Production Rendering</option>
-                        <option value="Study">Academic Study / Development</option>
-                    </select>
+    <div class="sidebar" id="sidebar">
+        <div class="nav-item" onclick="switchTab('marketView')">🛒 Browse Store</div>
+        <div class="nav-item" onclick="switchTab('buildView')">🖥️ Strategic Configurator</div>
+        <div class="nav-item" onclick="switchTab('gameVaultView')">🕹️ Game Vault</div>
+        <div class="nav-item" onclick="switchTab('jobsView')">💼 Career Openings</div>
+        <div class="nav-item" onclick="openSell()">⚙️ Appraise & Sell Gear</div>
+        <div class="nav-item admin-only-nav" id="adminSidebarLink" onclick="switchTab('opsView')">📊 Live Order Pipeline</div>
+    </div>
 
-                    <div style="margin-top:15px;">
-                        <input type="checkbox" id="ram-balance-toggle" onchange="runOptimizationEngine()" checked>
-                        <label for="ram-balance-toggle" style="display:inline; margin-left:8px; font-size:12px;">Enforce Balanced Dual-Channel Configuration</label>
-                    </div>
-                </div>
+    <div class="tab-navigation">
+        <button class="tab-btn active" id="btn-marketView" onclick="switchTab('marketView')">🛒 Marketplace</button>
+        <button class="tab-btn" id="btn-buildView" onclick="switchTab('buildView')">🖥️ PC Builder</button>
+        <button class="tab-btn" id="btn-gameVaultView" onclick="switchTab('gameVaultView')">🕹️ Game Vault</button>
+        <button class="tab-btn" id="btn-jobsView" onclick="switchTab('jobsView')">💼 Careers</button>
+        <button class="tab-btn admin-only-nav" id="btn-opsView" onclick="switchTab('opsView')">📊 HQ Pipeline</button>
+    </div>
 
-                <div class="output-box">
-                    <label>System Stability Profile</label>
-                    <div class="meter-container">
-                        <div class="meter-fill" id="bottleneck-meter"></div>
-                        <div class="meter-text" id="bottleneck-text">Evaluating Matrix...</div>
-                    </div>
-
-                    <label>Optimized Component Blueprint Configuration</label>
-                    <div id="component-specs-output">
-                        </div>
-
-                    <label style="margin-top:20px;">Dynamic Benchmark Target Frame Rates</label>
-                    <div class="spec-item">
-                        <span class="spec-label">Tomb Raider (2013) - 1080p High</span>
-                        <span class="spec-value" id="fps-tomb" style="color:#00cc44;">-- FPS</span>
-                    </div>
-                    <div class="spec-item">
-                        <span class="spec-label">Crysis 3 Remastered - 1080p Medium</span>
-                        <span class="spec-value" id="fps-crysis" style="color:#ffaa00;">-- FPS</span>
-                    </div>
-                </div>
-
+    <div class="cart-panel" id="cartPanel">
+        <div class="cart-header-title">
+            <span>Terminal Cart</span>
+            <span style="cursor:pointer; color:#666;" onclick="toggleCart()">✖</span>
+        </div>
+        <div class="cart-items-container" id="cartItemsContainer"></div>
+        <div class="cart-footer">
+            <div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:15px;">
+                <span>Total:</span>
+                <span id="cartTotalValue">₹0</span>
             </div>
-        </section>
+            <button class="checkout-btn" onclick="checkoutTerminal()">Verify & Secure Assets</button>
+        </div>
+    </div>
 
-        <section id="marketplace-tab" class="view-panel">
-            <h2>Hardware Supply Pipeline Terminal</h2>
-            
-            <label for="market-search">Search Inventory</label>
-            <input type="text" id="market-search" placeholder="Type components name to filter live matrix...">
-            
-            <div class="market-grid" id="market-grid-display">
-                </div>
+    <div class="app-view active" id="marketView">
+        <div class="market-header">
+            <h2 style="text-transform: uppercase; margin: 0; font-size: 24px;">Matrix Marketplace</h2>
+            <button onclick="openSell()" style="background:var(--primary); color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:bold; cursor:pointer; text-transform:uppercase; font-size:12px;">+ Post Listing</button>
+        </div>
+        
+        <div class="market-filter-row" id="marketFilterRow">
+            <button class="filter-chip active" onclick="filterMarketplace('all')">All Gear</button>
+            <button class="filter-chip" onclick="filterMarketplace('Component')">Components</button>
+            <button class="filter-chip" onclick="filterMarketplace('Full PC')">System Desktops</button>
+            <button class="filter-chip" onclick="filterMarketplace('Laptop')">Laptops</button>
+        </div>
 
-            <div class="cart-dropdown">
-                <h3 style="margin-top:0; border-bottom:1px solid #1e293b; padding-bottom:8px;">Active Procurement Buffer (Cart)</h3>
-                <div id="cart-items-list" style="font-size:14px; color:#cbd5e1;">Your pipeline is currently empty.</div>
-                <div style="display:flex; justify-content:space-between; margin-top:15px; font-weight:bold; font-size:16px; border-top:1px solid #1e293b; padding-top:10px;">
-                    <span>Invoice Total Cost:</span>
-                    <span id="cart-total-display" style="color:var(--neon-blue)">₹0</span>
-                </div>
-                <button class="btn-action" style="margin-top:15px; background:#00cc44;" onclick="checkoutTerminal()">Initiate Order Verification</button>
+        <div class="market-grid" id="marketGrid"></div>
+
+        <div style="margin-top: 40px; border-top: 1px dashed var(--border); padding-top: 30px;">
+            <h3 style="text-transform: uppercase; font-size:16px; color:var(--primary); margin-bottom:15px;">📋 My Active Orders & Shipments</h3>
+            <div id="userOrdersGrid" style="display: flex; flex-direction: column; gap: 12px;">
+                <div style="color:#666; font-size:13px;">No personal transactions deployed in current matrix session.</div>
             </div>
-        </section>
+        </div>
+    </div>
 
+    <div class="app-view" id="buildView">
+        <div class="wizard-container">
+            <div class="wizard-step active" id="wizStep1">
+                <h3 style="text-transform: uppercase; color: var(--primary); margin-top: 0;">Step 1: Set Target Budget</h3>
+                <div style="font-size: 44px; font-weight: 900; color: var(--text); text-align: center; margin: 20px 0;">
+                    ₹<span id="wizPriceDisplay">15,000</span>
+                </div>
+                <input type="range" id="wizBudgetSlider" min="15000" max="400000" step="1000" value="15000" oninput="syncBudgetInputs('slider')">
+                <input type="number" id="wizBudgetManual" min="15000" max="400000" value="15000" oninput="syncBudgetInputs('manual')">
+                <div class="wizard-nav-row" style="justify-content: flex-end;">
+                    <button class="wiz-btn next" onclick="changeWizardStep(2)">Next Range ➔</button>
+                </div>
+            </div>
+
+            <div class="wizard-step" id="wizStep2">
+                <h3 style="text-transform: uppercase; color: var(--primary); margin-top: 0;">Step 2: Choose Classification</h3>
+                <div class="category-grid">
+                    <div class="category-card" id="cat-gaming" onclick="selectCategory('gaming')">🎮 Gaming</div>
+                    <div class="category-card" id="cat-editing" onclick="selectCategory('editing')">🎬 Video Editing</div>
+                    <div class="category-card" id="cat-school" onclick="selectCategory('school')">📚 School Purpose</div>
+                    <div class="category-card" id="cat-modelling" onclick="selectCategory('modelling')">🧊 3D Modelling</div>
+                </div>
+                <div class="spec-output-box">
+                    <h4 style="margin: 0 0 10px 0; color: var(--primary); text-transform: uppercase; font-size: 12px;">Generated Matrix Configuration</h4>
+                    <div id="generatedSpecsArea">Select a category node to display optimization specs.</div>
+                </div>
+                <div class="wizard-nav-row">
+                    <button class="wiz-btn" onclick="changeWizardStep(1)">⬅ Back</button>
+                    <button class="wiz-btn next" onclick="goToStep3()">Next Stage ➔</button>
+                </div>
+            </div>
+
+            <div class="wizard-step" id="wizStep3">
+                <h3 style="text-transform: uppercase; color: var(--primary); margin-top: 0;">Step 3: Secure Gate</h3>
+                <select id="paymentMethodSelect">
+                    <option value="upi">Direct Digital Payment Architecture (UPI/Cards)</option>
+                </select>
+                <div class="treasure-box" id="treasureContainer">
+                    <input type="checkbox" id="useTreasureCheckbox" style="width: auto; margin: 0;" onchange="calculateFinalWizardPrice()" disabled>
+                    <div>
+                        <strong style="color: #666; font-size: 14px;" id="treasureTitle">🧰 Treasure Coins Locked</strong>
+                        <span style="font-size: 12px; display: block; color: #666;" id="treasureDesc">Checking database files... Only users with previous completed checkout orders can use coins.</span>
+                    </div>
+                </div>
+                <div style="margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-weight:bold; font-size:14px;">Adjusted Invoice Cost:</span>
+                    <strong style="font-size:24px; color:var(--primary);" id="wizardInvoiceTotal">₹0</strong>
+                </div>
+                <div class="wizard-nav-row">
+                    <button class="wiz-btn" onclick="changeWizardStep(2)">⬅ Back</button>
+                    <button class="wiz-btn next" onclick="changeWizardStep(4)">Next Stage ➔</button>
+                </div>
+            </div>
+
+            <div class="wizard-step" id="wizStep4">
+                <h3 style="text-transform: uppercase; color: var(--primary); margin-top: 0;">Step 4: Delivery Destination</h3>
+                <input type="text" id="shipAddress" placeholder="Apartment building number, Street Name...">
+                <input type="text" id="shipCity" placeholder="e.g., Chennai, Nagercoil, Mumbai">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <input type="text" id="shipState" placeholder="e.g., Tamil Nadu">
+                    <input type="text" id="shipPincode" placeholder="e.g., 629177" maxlength="6">
+                </div>
+                <div class="wizard-nav-row">
+                    <button class="wiz-btn" onclick="changeWizardStep(3)">⬅ Back</button>
+                    <button class="wiz-btn next" style="background:#1a73e8;" onclick="finalizeWizardBuildOrder()">Deploy Build Order 🛠️</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-view" id="opsView">
+        <h2 style="text-transform: uppercase; margin: 0 0 5px 0; font-size: 24px;">Live Operations Pipeline</h2>
+        <h3 style="text-transform: uppercase; font-size:14px; color:#0284c7; margin-bottom:10px;">📦 Client Build Orders</h3>
+        <div class="ops-grid" id="opsGrid" style="margin-bottom: 40px;"></div>
+
+        <h3 style="text-transform: uppercase; font-size:14px; color:#11998e; margin-bottom:10px;">💼 Submitted Job Packets</h3>
+        <div class="ops-grid" id="hrOpsGrid"></div>
+
+        <h3 style="text-transform: uppercase; font-size:14px; color:#ff4444; margin-top: 40px; margin-bottom:10px;">🚩 Security Violation Reports</h3>
+        <div class="ops-grid" id="reportsOpsGrid">
+            <div style="text-align:center; color:#555; padding:40px;">No incident packets found in security log matrices.</div>
+        </div>
+    </div>
+
+    <div class="app-view" id="gameVaultView">
+        <h2 style="text-transform: uppercase; margin: 0; font-size: 24px; color: #0284c7; font-style: italic;">🕹️ Arcade Game Vault</h2>
+        <div id="developerGameConsole" style="display: none; background: rgba(0, 162, 255, 0.05); border: 1px dashed #00a2ff; padding: 25px; border-radius: var(--radius); margin-bottom: 30px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                <input type="text" id="vaultGameName" placeholder="e.g., Silent Shadow: Level 1-5">
+                <input type="url" id="vaultGameUrl" placeholder="https://drive.google.com/...">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <input type="number" id="vaultGamePrice" placeholder="Price (₹)" value="0">
+                <input type="url" id="vaultGameImg" placeholder="Paste image web address URL">
+            </div>
+            <textarea id="vaultGameDesc" placeholder="Write level constraints, control mappings..." rows="2"></textarea>
+            <button onclick="submitGameToVault()" style="background:#00a2ff; color:#fff; border:none; padding:12px 24px; border-radius:8px; font-weight:bold; cursor:pointer; text-transform:uppercase;">Deploy Title to Archive</button>
+        </div>
+        <div class="market-grid" id="vaultGameGrid"></div>
+    </div>
+
+    <div class="app-view" id="jobsView">
+        <div class="wizard-container" style="max-width: 550px;">
+            <h2 style="text-transform: uppercase; color: #0284c7; margin-top:0; font-style: italic;">💼 Squad Recruitment Desk</h2>
+            <select id="jobRole">
+                <option value="Advertising Idea Giver">Advertising Idea Giver — Creative Concepts</option>
+                <option value="Social Media Manager">Social Media Manager — Community Growth</option>
+                <option value="Godot Game Developer">Godot Game Systems Developer (3D Physics)</option>
+                <option value="PC Hardware Specialist">PC Rig Assembly & Repair Specialist</option>
+            </select>
+            <textarea id="jobSkills" placeholder="List your experiences or execution ideas..." rows="5"></textarea>
+            <button onclick="submitJobApplication()" style="width:100%; background:linear-gradient(180deg, #60a5fa, #2563eb); color:white; border:none; padding:14px; border-radius:12px; font-weight:bold; cursor:pointer; text-transform:uppercase;">Submit Application Packet</button>
+        </div>
+    </div>
+
+    <div class="modal" id="sellModal">
+        <div class="modal-content">
+            <h2 style="margin-top: 0; margin-bottom: 20px; font-size: 20px; text-transform: uppercase;">Post New Listing</h2>
+            <select id="hardwareType">
+                <option value="Component">Component (GPU, CPU, RAM, etc.)</option>
+                <option value="Full PC">Full Desktop PC Setup</option>
+                <option value="Laptop">Laptop Computer</option>
+            </select>
+            <input type="text" id="hardwareName" placeholder="e.g., RX 580 8GB">
+            <input type="url" id="hardwareImg" placeholder="Paste image web URL">
+            <input type="number" id="hardwareStock" value="1" min="1">
+            <textarea id="sellerThoughts" placeholder="Share condition status indicators..." rows="3"></textarea>
+            
+            <input type="number" id="origPrice" placeholder="Original price (₹)" oninput="calculateHardwareValue()">
+            <select id="hardwareCondition" onchange="calculateHardwareValue()">
+                <option value="1.0">Mint / Like New (0% Drop)</option>
+                <option value="0.85">Good / Clean (15% Drop)</option>
+                <option value="0.65">Rough / Heavily Used (35% Drop)</option>
+            </select>
+
+            <div style="background:rgba(1,148,11,0.08); padding:18px; border-radius:15px; margin-bottom:20px; border:1px solid var(--primary);">
+                <b id="aiVal" style="font-size: 26px; color: var(--primary);">₹0</b>
+            </div>
+            <button onclick="submitSell()" style="background:var(--primary); color:white; border:none; padding:15px; width:100%; border-radius:10px; font-weight:bold; cursor:pointer; text-transform: uppercase;">Confirm & Post Listing</button>
+            <button onclick="closeModals()" style="background:none; border:none; color:#555; width:100%; margin-top:10px; cursor:pointer; font-weight: bold;">Cancel</button>
+        </div>
+    </div>
+
+    <div class="dm-box" id="dmBox">
+        <div class="dm-header">
+            <span id="dmTargetTitle">Seller Conversation</span>
+            <span style="cursor:pointer;" onclick="closeDMWindow()">✖</span>
+        </div>
+        <div class="dm-logs" id="dmLogs"></div>
+        <div class="dm-input-area">
+            <input type="text" id="dmInput" placeholder="Write message..." onkeypress="handleDMKey(event)">
+            <button onclick="sendDMMessage()">Send</button>
+        </div>
     </div>
 
     <script>
-        // ==========================================
-        // FIREBASE DATABASE CORE STORAGE CONFIGURATION
-        // ==========================================
+        // CORE BACKEND INITIALIZATION CONFIGURATIONS
         const firebaseConfig = {
-            apiKey: "YOUR_FIREBASE_API_KEY",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "YOUR_MESSAGING_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSy" + "CP1yvH-mJx7_vxtG4k18PjforZicWTXm4", 
+            authDomain: "potato-builders.firebaseapp.com",
+            databaseURL: "https://potato-builders-default-rtdb.firebaseio.com",
+            projectId: "potato-builders",
+            storageBucket: "potato-builders.firebasestorage.app",
+            messagingSenderId: "829474107482", 
+            appId: "1:829474107482:web:b1110a502c90aefb87e863"
         };
-        
-        // Initialize Firebase safely
+
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // Global Application Runtime States
-        let cart = [];
-        let searchTimeout; // Used for search input debouncer timing execution
-        
-        // OPTIMIZATION 1: Local Data Array Cache (Stops Redundant Firebase Read Pulls)
-        let localMarketItemsCache = [
-            { id: "cpu_i5", title: "Intel Core i5 Processor Node", price: 7500, stocks: 4, img: "https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?w=400" },
-            { id: "cpu_i7", title: "Intel Core i7 Engine Block", price: 14000, stocks: 2, img: "https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?w=400" },
-            { id: "gpu_rx580", title: "AMD Radeon RX 580 (8GB VRAM)", price: 8500, stocks: 5, img: "https://images.unsplash.com/photo-1591488320449-011701bb6704?w=400" },
-            { id: "ram_ddr4", title: "Crucial 8GB DDR4 RAM Stick", price: 2200, stocks: 12, img: "https://images.unsplash.com/photo-1562976540-1502c2145186?w=400" }
-        ];
-
-        // Fetch updates from database ONCE on startup to merge with local cache arrays
-        function syncDatabaseCatalog() {
-            database.ref('marketplace/items').once('value', (snapshot) => {
-                let dbData = snapshot.val();
-                if (dbData) {
-                    // Convert Firebase map object to our active array format if populated
-                    localMarketItemsCache = Object.keys(dbData).map(key => ({ id: key, ...dbData[key] }));
-                    renderMarketplace(localMarketItemsCache);
-                }
-            });
-        }
-
-        // View Nav Switcher
-        function switchView(viewId) {
-            document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
-            document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active'));
-            
-            document.getElementById(viewId).classList.add('active');
-            document.getElementById(`nav-${viewId}`).classList.add('active');
-        }
-
-        // ==========================================
-        // TAB 1 ENGINE LOGIC: OPTIMIZATION CALCULATIONS
-        // ==========================================
-        function runOptimizationEngine() {
-            let budget = parseInt(document.getElementById('budget-slider').value);
-            let role = document.getElementById('role-select').value;
-            let enforceRamRule = document.getElementById('ram-balance-toggle').checked;
-
-            document.getElementById('budget-val').innerText = `₹${budget.toLocaleString('en-IN')}`;
-
-            let cpuTier = 1; 
-            let gpuTier = 1; 
-            let ramAmount = 8; 
-            let storageSpec = "256GB M.2 SATA SSD";
-
-            if (budget >= 45000) { cpuTier = 2; gpuTier = 2; ramAmount = 12; storageSpec = "512GB NVMe SSD"; }
-            if (budget >= 65000) { cpuTier = 3; gpuTier = 2; ramAmount = 16; storageSpec = "1TB NVMe High-Speed Matrix"; }
-            if (budget >= 80000) { cpuTier = 3; gpuTier = 3; ramAmount = 32; storageSpec = "1TB NVMe + 2TB Secondary Vault"; }
-
-            if (role === "Gaming" && budget < 65000 && budget >= 40000) {
-                gpuTier = 3; 
-                cpuTier = 2;
-            } else if (role === "Editing") {
-                ramAmount = Math.max(ramAmount, 16); 
-            }
-
-            if (enforceRamRule && ramAmount === 12) {
-                ramAmount = 16; 
-            }
-
-            let cpuName = cpuTier === 1 ? "Intel Core i3 Platform Processor" : (cpuTier === 2 ? "Intel Core i5 Processing Node" : "Intel Core i7 Enterprise Engine");
-            let gpuName = gpuTier === 1 ? "Integrated Intel HD Graphics Architecture" : (gpuTier === 2 ? "AMD Radeon RX 580 (8GB GDDR5 Video Core)" : "NVIDIA RTX High-Performance Shader Node");
-
-            document.getElementById('component-specs-output').innerHTML = `
-                <div class="spec-item"><span class="spec-label">CPU System Core</span><span class="spec-value">${cpuName}</span></div>
-                <div class="spec-item"><span class="spec-label">Graphics Controller Array</span><span class="spec-value">${gpuName}</span></div>
-                <div class="spec-item"><span class="spec-label">System Memory Allocator</span><span class="spec-value">${ramAmount} GB Dual-Channel Allocation</span></div>
-                <div class="spec-item"><span class="spec-label">Primary Drive Matrix</span><span class="spec-value">${storageSpec}</span></div>
-            `;
-
-            let diff = cpuTier - gpuTier;
-            let meterFill = document.getElementById('bottleneck-meter');
-            let meterText = document.getElementById('bottleneck-text');
-
-            if (diff < -1) {
-                meterFill.style.width = "85%"; meterFill.style.backgroundColor = "#ef4444";
-                meterText.innerText = "🚨 CRITICAL BOTTLENECK: CPU Throttling Graphics Engine Flow";
-            } else if (diff > 1) {
-                meterFill.style.width = "70%"; meterFill.style.backgroundColor = "#f59e0b";
-                meterText.innerText = "⚠️ SYSTEM MISMATCH: GPU Pipeline Underutilizing CPU Core Capacity";
-            } else {
-                meterFill.style.width = "100%"; meterFill.style.backgroundColor = "#10b981";
-                meterText.innerText = "⚡ ARCHITECTURAL HARMONY: Balanced Hardware Configuration Profile";
-            }
-
-            let profileModifier = gpuTier * 32 + cpuTier * 12;
-            if (role === "Gaming") profileModifier += 15;
-            
-            document.getElementById('fps-tomb').innerText = `${Math.round(profileModifier * 1.1)} FPS`;
-            document.getElementById('fps-crysis').innerText = `${Math.round(profileModifier * 0.72)} FPS`;
-        }
-
-        // ==========================================
-        // TAB 2 ENGINE LOGIC: WAREHOUSE ACQUISITIONS & CART
-        // ==========================================
-        
-        // OPTIMIZATION 2 & 3: DOM Batching combined with Image Lazy Loading
-        function renderMarketplace(itemsArray) {
-            let elementContainer = document.getElementById('market-grid-display');
-            let massiveHtmlString = ""; // Cache string in memory instead of heavy multiple updates
-
-            itemsArray.forEach((item) => {
-                massiveHtmlString += `
-                    <div class="market-card">
-                        <img src="${item.img}" loading="lazy" alt="Hardware Block">
-                        <h3>${item.title}</h3>
-                        <p>₹${item.price.toLocaleString('en-IN')}</p>
-                        <div style="font-size:11px; margin-bottom:10px; color:${item.stocks > 2 ? '#34d399' : '#f87171'}">Available Units: ${item.stocks}</div>
-                        <button class="btn-action" onclick="addToAcquisitionBuffer('${item.id}')" ${item.stocks === 0 ? 'disabled style="background:#334155;"' : ''}>
-                            ${item.stocks === 0 ? 'Out of Stock' : 'Route to Buffer'}
-                        </button>
-                    </div>
-                `;
-            });
-            
-            elementContainer.innerHTML = massiveHtmlString; // Single optimized paint execution
-        }
-
-        // OPTIMIZATION 4: High-Performance Search Bar Debouncer Logic
-        document.getElementById('market-search').addEventListener('input', (e) => {
-            clearTimeout(searchTimeout); // Reset clock bounds on keystroke
-            
-            searchTimeout = setTimeout(() => {
-                let query = e.target.value.toLowerCase().trim();
-                
-                // Filter the local fast array cache instantly
-                let filteredItems = localMarketItemsCache.filter(item => 
-                    item.title.toLowerCase().includes(query)
-                );
-                
-                renderMarketplace(filteredItems); // Paint filtered outputs safely
-            }, 300); // 300ms pause configuration
-        });
-
-        function addToAcquisitionBuffer(itemId) {
-            let targetedProduct = localMarketItemsCache.find(p => p.id === itemId);
-            if (targetedProduct && targetedProduct.stocks > 0) {
-                cart.push({ itemId: targetedProduct.id, title: targetedProduct.title, price: targetedProduct.price });
-                updateCartInterface();
-            }
-        }
-
-        function updateCartInterface() {
-            let listElement = document.getElementById('cart-items-list');
-            if (cart.length === 0) {
-                listElement.innerHTML = "Your pipeline buffer is currently empty.";
-                document.getElementById('cart-total-display').innerText = "₹0";
-                return;
-            }
-
-            let internalTreeStr = "";
-            
-            // OPTIMIZATION 5: High-speed native JavaScript .reduce() pattern array math calculations
-            let costSum = cart.reduce((sum, element) => sum + element.price, 0);
-
-            cart.forEach((element, index) => {
-                internalTreeStr += `<div style="display:flex; justify-content:between; margin-bottom:6px;">
-                    <span style="flex-grow:1;">🔹 ${element.title}</span>
-                    <span style="color:#38bdf8; margin-right:15px;">₹${element.price}</span>
-                    <span style="color:#ef4444; cursor:pointer;" onclick="removeFromBuffer(${index})">[❌]</span>
-                </div>`;
-            });
-
-            listElement.innerHTML = internalTreeStr;
-            document.getElementById('cart-total-display').innerText = `₹${costSum.toLocaleString('en-IN')}`;
-        }
-
-        function removeFromBuffer(indexPosition) {
-            cart.splice(indexPosition, 1);
-            updateCartInterface();
-        }
-
-        // ==========================================
-        // SECURE ROUTED PAYMENT INTEGRATION CONTROLLER
-        // ==========================================
-        function checkoutTerminal() {
-            if(cart.length === 0) return;
-            
-            let totalCost = cart.reduce((acc, current) => acc + current.price, 0);
-            let orderId = "ORD_" + Date.now();
-            
-            database.ref('system_settings').once('value', (snapshot) => {
-                let systemData = snapshot.val() || { target_gpay_number: "+91 9876543210", gpay_name: "TAMIL NADU GRAMA BANK MANAGER" };
-                
-                let gpayNumber = systemData.target_gpay_number;
-                let gpayAccountName = systemData.gpay_name;
-
-                let itemsPayload = cart.map(c => ({ itemId: c.itemId, title: c.title }));
-                database.ref(`marketplace/orders/${orderId}`).set({
-                    orderType: "Secure Gateway Checkout Setup",
-                    invoiceCost: totalCost,
-                    purchasedItemsArray: itemsPayload,
-                    paymentStatus: "Pending External Manual Cross-Check Validation Verification",
-                    timestamp: Date.now()
-                });
-
-                let paymentWindow = window.open("", "GPay Transfer Matrix Terminal", "width=440,height=580");
-                paymentWindow.document.write(`
-                    <html lang="en">
-                    <head><title>Secure Verification Gateway Node</title></head>
-                    <body style="text-align:center; font-family:sans-serif; background:#020617; color:#f1f5f9; padding:25px 15px; margin:0;">
-                        <div style="border: 1px dashed #0096ff; padding: 20px; border-radius: 16px; max-width: 370px; margin: 0 auto; background: #0f172a; box-sizing:border-box; box-shadow:0 0 15px rgba(0,142,255,0.2);">
-                            <h3 style="text-transform:uppercase; color:#0096ff; margin-top:0; letter-spacing:1px;">📱 UPI Routing Gateway</h3>
-                            <p style="font-size:12px; color:#94a3b8; margin-bottom:15px;">Route transaction funds directly through the banking network interface.</p>
-                            
-                            <div style="background:rgba(0,150,255,0.05); border:1px solid #0096ff; padding:15px; border-radius:10px; margin-bottom:15px;">
-                                <span style="font-size:11px; color:#64748b; display:block; text-transform:uppercase;">Invoice Total Cost Due</span>
-                                <h2 style="margin:5px 0; color:#fff; font-size:32px;">₹${totalCost.toLocaleString('en-IN')}</h2>
-                                <span style="font-size:14px; color:#fff; background:#020617; padding:5px 10px; border-radius:4px; display:inline-block; font-family:monospace; margin-top:5px; border:1px solid #1e293b;">${gpayNumber}</span>
-                            </div>
-
-                            <div style="background: rgba(245,158,11,0.05); border: 1px solid #f59e0b; padding: 11px; border-radius: 8px; font-size: 11px; color: #fbbf24; margin-bottom: 15px; text-align: left; line-height:1.4;">
-                                ⚠️ <b>Verification Routing Note:</b> GPay user directory endpoint will register legal name matches as: <b>"${gpayAccountName}"</b>. Verify bank ledger data corresponds before submitting PIN profile values.
-                            </div>
-
-                            <div style="text-align:left; font-size:12px; color:#cbd5e1; margin-bottom:12px;">
-                                <span style="color:#0096ff; font-weight:bold; display:block; margin-bottom:4px;">Validation Steps:</span>
-                                Copy the 12-digit UPI Ref No. / Bank Transaction ID string from your GPay app historical balance sheet and enter below:
-                            </div>
-
-                            <input type="text" id="userTxnRef" placeholder="Paste 12-Digit Reference ID" style="width:100%; padding:10px; background:#020617; border:1px solid #1e293b; color:#fff; border-radius:6px; margin-bottom:15px; font-family:monospace; text-align:center;">
-                            
-                            <button onclick="window.opener.confirmManualGPayPayment('${orderId}', document.getElementById('userTxnRef').value)" style="width:100%; background:#00cc44; color:black; border:none; padding:12px; border-radius:6px; font-weight:bold; font-size:13px; text-transform:uppercase; cursor:pointer;">Submit Code for Verification</button>
-                        </div>
-                    </body>
-                    </html>
-                `);
-            });
-        }
-
-        window.confirmManualGPayPayment = function(orderId, txnReferenceCode) {
-            if(txnReferenceCode.trim().length < 6) {
-                alert("Security Verification Rejected: Input format string token invalid.");
-                return;
-            }
-
-            database.ref(`marketplace/orders/${orderId}`).update({
-                paymentStatus: "Payment Logged: Verification Pending Cross-Reference Check",
-                transactionIDProof: txnReferenceCode
-            });
-
-            cart.forEach(cartItem => {
-                let warehouseElement = localMarketItemsCache.find(p => p.id === cartItem.itemId);
-                if(warehouseElement) {
-                    warehouseElement.stocks = Math.max(0, warehouseElement.stocks - 1);
-                }
-            });
-
-            cart = [];
-            updateCartInterface();
-            renderMarketplace(localMarketItemsCache);
-            
-            alert("✨ Transaction Verification Code logged securely to Pipeline HQ. Your order parameters are buffered safely pending back-end manual checking clearance pools.");
+        const localAccounts = {
+            "nafeez": "1234",
+            "admin": "potato2026",
+            "opsmanager": "opspass2026",
+            "guest": "0000"
         };
 
-        // Application Execution Initializer Hooks
+        let cart = [];
+        let marketItems = []; 
+        let activeDMPath = null;
+        let currentUser = null; 
+        let computedAppraisalValue = 0;
+        let currentFilterCategory = 'all';
+        let selectedCategoryNode = 'gaming';
+        let activeSelectedBudget = 15000;
+
+        function applyCorporateTheme(themeName) {
+            document.body.className = ""; 
+            document.querySelectorAll('.theme-toggle-btn').forEach(btn => btn.classList.remove('active'));
+            if (themeName !== 'matrix') document.body.classList.add('theme-' + themeName);
+            document.getElementById('theme-btn-' + themeName).classList.add('active');
+            localStorage.setItem('potato_terminal_theme', themeName);
+        }
+
+        function handleTerminalLogin() {
+            let user = document.getElementById('authUsername').value.trim().toLowerCase();
+            let pass = document.getElementById('authPassword').value.trim();
+            if(!user || !pass) { alert("Please input credentials."); return; }
+            if (localAccounts[user] && localAccounts[user] === pass) {
+                loginSuccess(user);
+            } else {
+                alert("Access Denied!");
+            }
+        }
+
+        function loginSuccess(username) {
+            currentUser = username;
+            localStorage.setItem('potato_local_session', username);
+            document.getElementById('authGate').style.display = 'none';
+            document.getElementById('userDisplayTag').innerText = `USER: ${username.toUpperCase()}`;
+            
+            listenToMarketplace();
+            listenToGameVault();
+            syncUserPersonalOrders(username);
+            selectCategory('gaming');
+            
+            let savedTheme = localStorage.getItem('potato_terminal_theme') || 'matrix';
+            applyCorporateTheme(savedTheme);
+
+            if (username === 'nafeez' || username === 'admin') {
+                document.getElementById('developerGameConsole').style.display = 'block';
+            }
+
+            if (username === 'nafeez' || username === 'admin' || username === 'opsmanager') {
+                document.querySelectorAll('.admin-only-nav').forEach(el => el.style.display = 'block');
+                syncOperationsPipeline();
+                syncHRApplications();
+                syncViolationReports();
+            }
+        }
+
+        function syncUserPersonalOrders(username) {
+            database.ref('marketplace/orders').on('value', snapshot => {
+                let container = document.getElementById('userOrdersGrid');
+                if (!container) return;
+                container.innerHTML = "";
+                let orders = snapshot.val();
+                let matchCount = 0;
+
+                if (!orders) {
+                    container.innerHTML = `<div style="color:#666; font-size:13px;">No personal transactions deployed in current matrix session.</div>`;
+                    return;
+                }
+
+                Object.keys(orders).reverse().forEach(key => {
+                    let ord = orders[key];
+                    if (ord.buyerName === username) {
+                        matchCount++;
+                        let dateStr = new Date(ord.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        let contents = ord.purchasedItemsArray ? ord.purchasedItemsArray.map(i => i.title).join(', ') : "Custom Configurator Build Rig";
+                        
+                        container.innerHTML += `
+                            <div style="background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 15px; display: flex; justify-content: space-between; align-items: center; gap: 15px;">
+                                <div>
+                                    <span style="font-size: 10px; background: rgba(1, 148, 11, 0.1); color: var(--primary); padding: 2px 8px; border-radius: 10px; font-weight: bold; text-transform: uppercase;">Processing Shipment</span>
+                                    <h4 style="margin: 6px 0 4px 0; font-size: 14px;">${contents}</h4>
+                                    <p style="margin: 0; font-size: 12px; color: #666;">Placed at ${dateStr} • Invoice Total: <b>₹${ord.invoiceCost.toLocaleString('en-IN')}</b></p>
+                                </div>
+                                <button onclick="executeUserOrderCancellation('${key}')" style="background: #ff4444; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer;">✕ Cancel & Refund</button>
+                            </div>`;
+                    }
+                });
+
+                if (matchCount === 0) {
+                    container.innerHTML = `<div style="color:#666; font-size:13px;">No personal transactions deployed in current matrix session.</div>`;
+                }
+            });
+        }
+
+        function executeUserOrderCancellation(orderId) {
+            if (!confirm("Are you sure you want to cancel this order? Your funds will be routed back instantly and items returned to shelves.")) return;
+
+            database.ref(`marketplace/orders/${orderId}`).once('value', snapshot => {
+                let orderData = snapshot.val();
+                if (!orderData) return;
+
+                let updates = {};
+                if (orderData.purchasedItemsArray && Array.isArray(orderData.purchasedItemsArray)) {
+                    orderData.purchasedItemsArray.forEach(purchasedItem => {
+                        let currentMarketItem = marketItems.find(m => m.id === purchasedItem.itemId);
+                        if (currentMarketItem) {
+                            let updatedStockCount = (parseInt(currentMarketItem.stocks) || 0) + 1;
+                            updates[`marketplace/items/${purchasedItem.itemId}/stocks`] = updatedStockCount;
+                        }
+                    });
+                }
+
+                updates[`marketplace/orders/${orderId}`] = null;
+                database.ref().update(updates).then(() => alert("💰 Order cancelled successfully! Refund routed back into your simulated account."));
+            });
+        }
+
+        function reportMarketplaceListing(itemId, itemTitle) {
+            let reason = prompt(`🚨 FLAG REPORT ACTION ENGINE\nTarget Item: ${itemTitle.toUpperCase()}\n\nPlease write the violation reason:`);
+            if (!reason || reason.trim() === "") return;
+
+            database.ref('marketplace/reports').push({
+                reportedItemId: itemId,
+                reportedItemTitle: itemTitle,
+                flaggedBy: currentUser || "anonymous_node",
+                violationReason: reason.trim(),
+                timestamp: Date.now()
+            }).then(() => alert("🔒 Security Logged: Listing flagged for internal squad review!"));
+        }
+
+        function syncOperationsPipeline() {
+            database.ref('marketplace/orders').on('value', snapshot => {
+                let grid = document.getElementById('opsGrid'); grid.innerHTML = "";
+                let orders = snapshot.val();
+                if (!orders) { grid.innerHTML = `<div style="color:#555; padding:20px;">No active client builds running.</div>`; return; }
+
+                Object.keys(orders).reverse().forEach(key => {
+                    let ord = orders[key];
+                    let contents = ord.purchasedItemsArray ? ord.purchasedItemsArray.map(i => i.title).join(', ') : "Custom Configurator Build Rig";
+                    grid.innerHTML += `
+                        <div class="ops-order-card" style="border-left: 4px solid #1a73e8;">
+                            <button class="delete-listing-btn" onclick="terminateAndRestockOrder('${key}')">✕</button>
+                            <span class="ops-badge">${ord.buyerName.toUpperCase()}</span>
+                            <h4>${ord.orderType}</h4>
+                            <p style="font-size:13px; margin:4px 0;">📦 Content Node: ${contents}</p>
+                            <b style="color:var(--primary)">₹${ord.invoiceCost.toLocaleString('en-IN')}</b>
+                        </div>`;
+                });
+            });
+        }
+
+        function terminateAndRestockOrder(orderId) {
+            if (!confirm("Permanently wipe this order log and return items to shelves?")) return;
+            database.ref(`marketplace/orders/${orderId}`).once('value', snapshot => {
+                let orderData = snapshot.val(); if (!orderData) return;
+                let updates = {};
+                if (orderData.purchasedItemsArray && Array.isArray(orderData.purchasedItemsArray)) {
+                    orderData.purchasedItemsArray.forEach(pItem => {
+                        let curItem = marketItems.find(m => m.id === pItem.itemId);
+                        if (curItem) updates[`marketplace/items/${pItem.itemId}/stocks`] = (parseInt(curItem.stocks) || 0) + 1;
+                    });
+                }
+                updates[`marketplace/orders/${orderId}`] = null;
+                database.ref().update(updates);
+            });
+        }
+
+        function syncViolationReports() {
+            database.ref('marketplace/reports').on('value', snapshot => {
+                let container = document.getElementById('reportsOpsGrid'); container.innerHTML = "";
+                let reports = snapshot.val();
+                if (!reports) { container.innerHTML = `<div style="text-align:center; color:#555; padding:40px;">No incidents inside database matrices.</div>`; return; }
+
+                Object.keys(reports).reverse().forEach(key => {
+                    let rep = reports[key];
+                    container.innerHTML += `
+                        <div class="ops-order-card" style="border-left: 4px solid #ff4444;">
+                            <button class="delete-listing-btn" onclick="database.ref('marketplace/reports/${key}').remove()">✕</button>
+                            <h4>🚩 Flawed Context: ${rep.reportedItemTitle}</h4>
+                            <p style="margin:4px 0; font-size:12px; color:#aaa;">Reported by: ${rep.flaggedBy.toUpperCase()}</p>
+                            <p style="margin:4px 0; font-size:13px; color:#ff4444;"><b>Reason:</b> ${rep.violationReason}</p>
+                        </div>`;
+                });
+            });
+        }
+
+        function checkoutTerminal() {
+            if(cart.length === 0) return;
+            let updates = {}; let orderId = "order_" + Date.now();
+            let itemsPayload = cart.map(c => ({ itemId: c.itemId, title: c.title }));
+
+            updates[`marketplace/orders/${orderId}`] = {
+                orderType: "Marketplace Checkout",
+                buyerName: currentUser,
+                invoiceCost: cart.reduce((acc, current) => acc + current.price, 0),
+                purchasedItemsArray: itemsPayload, 
+                timestamp: Date.now()
+            };
+
+            cart.forEach(c => {
+                let dbItem = marketItems.find(i => i.id === c.itemId);
+                if(dbItem) updates[`marketplace/items/${c.itemId}/stocks`] = Math.max(0, parseInt(dbItem.stocks) - 1);
+            });
+            
+            database.ref().update(updates).then(() => { cart = []; updateCartUI(); toggleCart(); alert("Transaction Completed!"); });
+        }
+
+        function listenToMarketplace() {
+            database.ref('marketplace/items').on('value', snapshot => {
+                const data = snapshot.val(); marketItems = [];
+                if(data) Object.keys(data).forEach(key => { marketItems.push({ id: key, ...data[key] }); });
+                renderMarketGrid();
+            });
+        }
+
+        function renderMarketGrid() {
+            let grid = document.getElementById('marketGrid'); grid.innerHTML = "";
+            let itemsToDisplay = currentFilterCategory === 'all' ? marketItems : marketItems.filter(i => i.type === currentFilterCategory);
+
+            itemsToDisplay.forEach(item => {
+                let stockCount = parseInt(item.stocks) || 0;
+                let buyActionBtn = stockCount <= 0 
+                    ? `<button disabled style="background:#333; color:#666; padding:8px; border-radius:6px; font-weight:bold;">SOLD OUT</button>`
+                    : `<button onclick="addToCart('${item.id}', '${item.title}', ${item.price})" style="background:var(--primary); border:none; color:white; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:bold;">🛒 +</button>`;
+                let deleteBtn = (currentUser && item.sellerName === currentUser) ? `<button class="delete-listing-btn" onclick="database.ref('marketplace/items/${item.id}').remove()">✖</button>` : "";
+                
+                grid.innerHTML += `
+                    <div class="market-card">
+                        ${deleteBtn}
+                        <div class="market-img-container"><img src="${item.imageUrl || 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400'}" class="market-img"></div>
+                        <div class="market-details">
+                            <div>
+                                <div style="font-weight:bold;">${item.title}</div>
+                                <div class="market-tag-container"><span class="market-tag prime">${item.type.toUpperCase()}</span><span class="market-tag">Stock: ${stockCount}</span></div>
+                                <div style="color:var(--primary); font-weight:900; margin:6px 0;">₹${item.price.toLocaleString('en-IN')}</div>
+                            </div>
+                            <div class="market-action-row">
+                                ${buyActionBtn}
+                                <button onclick="openInternalDM('${item.id}', '${item.title}', '${item.sellerName}')" class="chat-seller-btn">💬 Chat</button>
+                                <button onclick="reportMarketplaceListing('${item.id}', '${item.title}')" style="background:#222; border:1px solid #ff4444; color:#ff4444; border-radius:6px; padding:8px 10px; cursor:pointer; font-weight:bold;">🚩</button>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function addToCart(itemId, title, price) { cart.push({ cartId: Date.now(), itemId, title, price }); updateCartUI(); }
+        function removeFromCart(id) { cart = cart.filter(c => c.cartId !== id); updateCartUI(); }
+        function updateCartUI() {
+            document.getElementById('cartCount').innerText = cart.length;
+            let container = document.getElementById('cartItemsContainer'); container.innerHTML = ""; let total = 0;
+            cart.forEach(c => { total += c.price; container.innerHTML += `<div class="cart-item-card"><b>${c.title}</b><button class="remove-item-btn" onclick="removeFromCart(${c.cartId})">✖</button></div>`; });
+            document.getElementById('cartTotalValue').innerText = "₹" + total.toLocaleString('en-IN');
+        }
+
+        function openInternalDM(itemId, itemTitle, sellerName) {
+            if(!currentUser || currentUser === sellerName) return;
+            activeDMPath = `marketplace/chats/${itemId}_${currentUser}`;
+            document.getElementById('dmTargetTitle').innerText = `Chat: ${itemTitle}`;
+            document.getElementById('dmBox').style.display = 'flex';
+            database.ref(activeDMPath).on('value', snapshot => {
+                let logs = document.getElementById('dmLogs'); logs.innerHTML = ""; let msgs = snapshot.val();
+                if(msgs) Object.keys(msgs).forEach(k => {
+                    let m = msgs[k]; let align = m.senderName === currentUser ? 'align-self:flex-end; background:var(--primary);' : 'align-self:flex-start; background:rgba(0,0,0,0.3);';
+                    logs.innerHTML += `<div style="padding:8px; border-radius:8px; margin-bottom:4px; ${align}"><b>${m.senderName.toUpperCase()}:</b> ${m.msgText}</div>`;
+                });
+            });
+        }
+
+        function sendDMMessage() {
+            let el = document.getElementById('dmInput'); let txt = el.value.trim(); if(!txt || !activeDMPath) return;
+            database.ref(activeDMPath).push({ senderName: currentUser, msgText: txt, timestamp: Date.now() }).then(() => el.value = "");
+        }
+
+        function syncBudgetInputs(source) {
+            let slider = document.getElementById('wizBudgetSlider'); let manual = document.getElementById('wizBudgetManual');
+            activeSelectedBudget = source === 'slider' ? parseInt(slider.value) : Math.max(15000, Math.min(400000, parseInt(manual.value) || 15000));
+            slider.value = activeSelectedBudget; manual.value = activeSelectedBudget;
+            document.getElementById('wizPriceDisplay').innerText = activeSelectedBudget.toLocaleString('en-IN');
+            generateDynamicSpecs(); calculateFinalWizardPrice();
+        }
+
+        function changeWizardStep(stepNum) { document.querySelectorAll('.wizard-step').forEach(s => s.classList.remove('active')); document.getElementById('wizStep' + stepNum).classList.add('active'); }
+        function selectCategory(catId) { selectedCategoryNode = catId; document.querySelectorAll('.category-card').forEach(c => c.classList.remove('selected')); document.getElementById('cat-' + catId).classList.add('selected'); generateDynamicSpecs(); }
+        
+        function generateDynamicSpecs() {
+            let b = activeSelectedBudget; let out = "";
+            if (selectedCategoryNode === 'gaming') {
+                out = b <= 30000 ? `<b>CPU:</b> i3-10105F | <b>GPU:</b> RX 580 8GB` : `<b>CPU:</b> i5-12400F | <b>GPU:</b> RTX 4060`;
+            } else { out = `<b>CPU:</b> High-Core Performance System Architecture`; }
+            document.getElementById('generatedSpecsArea').innerHTML = out;
+        }
+
+        function goToStep3() {
+            changeWizardStep(3);
+            database.ref('marketplace/orders').once('value', snap => {
+                let orders = snap.val(); let hasOrdered = false;
+                if (orders) Object.keys(orders).forEach(k => { if(orders[k].buyerName === currentUser) hasOrdered = true; });
+                document.getElementById('useTreasureCheckbox').disabled = !hasOrdered;
+                document.getElementById('treasureTitle').innerText = hasOrdered ? "✨ Treasure Coins Active!" : "🔒 Treasure Locked";
+                calculateFinalWizardPrice();
+            });
+        }
+
+        function calculateFinalWizardPrice() {
+            let cost = activeSelectedBudget - (document.getElementById('useTreasureCheckbox').checked ? 500 : 0);
+            document.getElementById('wizardInvoiceTotal').innerText = "₹" + cost.toLocaleString('en-IN');
+            return cost;
+        }
+
+        function finalizeWizardBuildOrder() {
+            let payload = {
+                orderType: "Custom Wizard Build", buyerName: currentUser, allocatedBudget: activeSelectedBudget,
+                invoiceCost: calculateFinalWizardPrice(), timestamp: Date.now()
+            };
+            database.ref('marketplace/orders').push(payload).then(() => { changeWizardStep(1); switchTab('marketView'); });
+        }
+
+        function calculateHardwareValue() {
+            let orig = parseFloat(document.getElementById('origPrice').value) || 0;
+            let cond = parseFloat(document.getElementById('hardwareCondition').value);
+            computedAppraisalValue = Math.round(orig * 0.60 * cond);
+            document.getElementById('aiVal').innerText = "₹" + computedAppraisalValue.toLocaleString('en-IN');
+        }
+
+        function submitSell() {
+            let title = document.getElementById('hardwareName').value.trim(); if(!title || computedAppraisalValue <= 0) return;
+            database.ref('marketplace/items').push({ 
+                title, imageUrl: document.getElementById('hardwareImg').value.trim(), stocks: parseInt(document.getElementById('hardwareStock').value) || 1, 
+                thoughts: document.getElementById('sellerThoughts').value.trim(), price: computedAppraisalValue, type: document.getElementById('hardwareType').value, sellerName: currentUser, timestamp: Date.now() 
+            }).then(() => closeModals());
+        }
+
+        function submitGameToVault() {
+            database.ref('marketplace/vault_games').push({
+                title: document.getElementById('vaultGameName').value.trim(), downloadUrl: document.getElementById('vaultGameUrl').value.trim(),
+                description: document.getElementById('vaultGameDesc').value.trim(), price: parseInt(document.getElementById('vaultGamePrice').value) || 0,
+                imageUrl: document.getElementById('vaultGameImg').value.trim(), timestamp: Date.now()
+            }).then(() => alert("🕹️ Game written to archive matrices!"));
+        }
+
+        function listenToGameVault() {
+            database.ref('marketplace/vault_games').on('value', snap => {
+                let grid = document.getElementById('vaultGameGrid'); grid.innerHTML = ""; let games = snap.val();
+                if(!games) return;
+                Object.keys(games).forEach(k => {
+                    let g = games[k];
+                    grid.innerHTML += `
+                        <div class="market-card" style="border: 1px dashed #00a2ff;">
+                            <div class="market-details">
+                                <h3 style="margin:0;">🎮 ${g.title.toUpperCase()}</h3>
+                                <p style="font-size:12px; color:#aaa;">${g.description}</p>
+                                <a href="${g.downloadUrl}" target="_blank"><button style="background:#1a73e8; color:#fff; padding:6px; border:none; border-radius:4px; cursor:pointer;">📥 DOWNLOAD</button></a>
+                            </div>
+                        </div>`;
+                });
+            });
+        }
+
+        function submitJobApplication() {
+            database.ref('marketplace/job_applications').push({
+                applicantName: currentUser || "anonymous_node", role: document.getElementById('jobRole').value,
+                skillDescription: document.getElementById('jobSkills').value.trim(), timestamp: Date.now()
+            }).then(() => { document.getElementById('jobSkills').value = ""; alert("🚀 Application Packet Shared!"); });
+        }
+
+        function syncHRApplications() {
+            database.ref('marketplace/job_applications').on('value', snapshot => {
+                let hrGrid = document.getElementById('hrOpsGrid'); hrGrid.innerHTML = "";
+                let applications = snapshot.val(); if (!applications) return;
+                Object.keys(applications).forEach(key => {
+                    let app = applications[key];
+                    hrGrid.innerHTML += `
+                        <div class="ops-order-card" style="border-left: 4px solid #38ef7d;">
+                            <button class="delete-listing-btn" onclick="database.ref('marketplace/job_applications/${key}').remove()">✕</button>
+                            <h4>${app.role}</h4>
+                            <p style="font-size:12px;">Handle: ${app.applicantName.toUpperCase()}</p>
+                            <p style="font-size:13px; color:#ccc;">${app.skillDescription}</p>
+                        </div>`;
+                });
+            });
+        }
+
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
+        function closeModals() { document.getElementById('sellModal').style.display = 'none'; resetSellForm(); }
+        function resetSellForm() { document.getElementById('hardwareName').value = ""; document.getElementById('origPrice').value = ""; document.getElementById('aiVal').innerText = "₹0"; computedAppraisalValue = 0; }
+        function toggleCart() { document.getElementById('cartPanel').classList.toggle('active'); }
+        function openSell() { if(currentUser) document.getElementById('sellModal').style.display = 'flex'; }
+        function closeDMWindow() { document.getElementById('dmBox').style.display = 'none'; }
+        function handleDMKey(e) { if(e.key === 'Enter') sendDMMessage(); }
+        function logoutTerminal() { currentUser = null; localStorage.removeItem('potato_local_session'); document.getElementById('authGate').style.display = 'flex'; }
+
+        function switchTab(viewId) {
+            document.querySelectorAll('.app-view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            if(document.getElementById('btn-' + viewId)) document.getElementById('btn-' + viewId).classList.add('active');
+            if(document.getElementById('sidebar').classList.contains('active')) toggleSidebar();
+        }
+
+        function filterMarketplace(category) { currentFilterCategory = category; document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active')); renderMarketGrid(); }
+
         window.onload = function() {
-            syncDatabaseCatalog(); // Pull updates from database once to set cache
-            runOptimizationEngine();
-            renderMarketplace(localMarketItemsCache);
+            let session = localStorage.getItem('potato_local_session');
+            if(session && localAccounts[session]) loginSuccess(session);
         };
     </script>
 </body>
