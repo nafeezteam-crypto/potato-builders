@@ -393,17 +393,43 @@
         <div class="market-grid" id="vaultGameGrid"></div>
     </div>
 
-    <div class="app-view" id="jobsView">
-        <div class="wizard-container" style="max-width: 550px;">
+<div class="app-view" id="jobsView">
+        <div class="wizard-container" style="max-width: 550px; margin-bottom: 30px;">
             <h2 style="text-transform: uppercase; color: #0284c7; margin-top:0; font-style: italic;">💼 Squad Recruitment Desk</h2>
-            <select id="jobRole">
+            
+            <label style="font-size:12px; color:#aaa; display:block; margin-bottom:4px;">Select Desired Role:</label>
+            <select id="jobRole" style="width:100%; padding:10px; background:#111; color:#fff; border:1px solid var(--border); border-radius:8px; margin-bottom:12px;">
                 <option value="Advertising Idea Giver">Advertising Idea Giver — Creative Concepts</option>
                 <option value="Social Media Manager">Social Media Manager — Community Growth</option>
                 <option value="Godot Game Developer">Godot Game Systems Developer (3D Physics)</option>
                 <option value="PC Hardware Specialist">PC Rig Assembly & Repair Specialist</option>
             </select>
-            <textarea id="jobSkills" placeholder="List your experiences or execution ideas..." rows="5"></textarea>
-            <button onclick="submitJobApplication()" style="width:100%; background:linear-gradient(180deg, #60a5fa, #2563eb); color:white; border:none; padding:14px; border-radius:12px; font-weight:bold; cursor:pointer; text-transform:uppercase;">Submit Application Packet</button>
+
+            <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                <div style="flex: 1;">
+                    <label style="font-size:12px; color:#aaa; display:block; margin-bottom:4px;">Age:</label>
+                    <input type="number" id="jobAge" placeholder="e.g., 20" min="15" max="100" style="width:100%; padding:10px; background:#111; color:#fff; border:1px solid var(--border); border-radius:8px;">
+                </div>
+                <div style="flex: 1;">
+                    <label style="font-size:12px; color:#aaa; display:block; margin-bottom:4px;">Experience Level:</label>
+                    <select id="jobExp" style="width:100%; padding:10px; background:#111; color:#fff; border:1px solid var(--border); border-radius:8px;">
+                        <option value="Rookie / Beginner">Rookie / Beginner</option>
+                        <option value="Intermediate Executer">Intermediate Executer</option>
+                        <option value="Pro / Specialist">Pro / Specialist</option>
+                    </select>
+                </div>
+            </div>
+
+            <label style="font-size:12px; color:#aaa; display:block; margin-bottom:4px;">Experience & Execution Ideas:</label>
+            <textarea id="jobSkills" placeholder="List your experiences or execution ideas..." rows="4" style="width:100%; padding:10px; background:#111; color:#fff; border:1px solid var(--border); border-radius:8px; margin-bottom:15px; resize:vertical;"></textarea>
+            
+            <button onclick="submitJobApplication()" style="width:100%; background:linear-gradient(180deg, #60a5fa, #2563eb); color:white; border:none; padding:14px; border-radius:12px; font-weight:bold; cursor:pointer; text-transform:uppercase; letter-spacing:0.5px;">Submit Application Packet</button>
+        </div>
+
+        <div class="admin-only-nav" style="display:none; max-width: 550px; background: rgba(0,0,0,0.2); padding: 20px; border-radius: 12px; border: 1px solid var(--border);">
+            <h3 style="text-transform: uppercase; color: #38ef7d; margin-top:0; font-size:16px; display:flex; align-items:center; gap:8px;">👑 Active Squad Roster (Hired Nodes)</h3>
+            <div id="hiredSquadGrid" style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+                </div>
         </div>
     </div>
 
@@ -528,6 +554,7 @@
                 syncOperationsPipeline();
                 syncHRApplications();
                 syncViolationReports();
+                syncViolationReports();                
             }
         }
 
@@ -883,105 +910,133 @@
             });
         }
 
-        function submitJobApplication() {
+function submitJobApplication() {
+            let ageVal = document.getElementById('jobAge').value.trim();
+            let skillsVal = document.getElementById('jobSkills').value.trim();
+            
+            if (!ageVal || !skillsVal) {
+                alert("Please fill in your Age and Experience data before submitting.");
+                return;
+            }
+
             database.ref('marketplace/job_applications').push({
-                applicantName: currentUser || "anonymous_node", role: document.getElementById('jobRole').value,
-                skillDescription: document.getElementById('jobSkills').value.trim(), timestamp: Date.now()
-            }).then(() => { document.getElementById('jobSkills').value = ""; alert("🚀 Application Packet Shared!"); });
+                applicantName: currentUser || "anonymous_node",
+                role: document.getElementById('jobRole').value,
+                age: parseInt(ageVal),
+                experienceTier: document.getElementById('jobExp').value,
+                skillDescription: skillsVal,
+                timestamp: Date.now()
+            }).then(() => {
+                document.getElementById('jobSkills').value = "";
+                document.getElementById('jobAge').value = "";
+                alert("🚀 Application Packet Shared! The squad operators have logged your details.");
+            });
         }
 
-function syncHRApplications() {
+        function syncHRApplications() {
             database.ref('marketplace/job_applications').on('value', snapshot => {
-                let hrGrid = document.getElementById('hrOpsGrid'); if(!hrGrid) return;
+                let hrGrid = document.getElementById('hrOpsGrid');
+                if (!hrGrid) return;
                 hrGrid.innerHTML = "";
-                let applications = snapshot.val(); if (!applications) return;
+                let applications = snapshot.val();
+                if (!applications) {
+                    hrGrid.innerHTML = `<div style="color:#555; font-size:13px; padding:10px;">No incoming application packets sitting on the desk.</div>`;
+                    return;
+                }
                 
                 Object.keys(applications).forEach(key => {
                     let app = applications[key];
-                    let applicantHandle = app.applicantName.toLowerCase();
+                    let displayAge = app.age ? ` • Age: ${app.age}` : "";
+                    let displayTier = app.experienceTier ? ` [${app.experienceTier}]` : "";
                     
                     hrGrid.innerHTML += `
                         <div class="ops-order-card" style="border-left: 4px solid #38ef7d; position:relative; padding:15px; background:var(--card); margin-bottom:10px; border-radius:8px;">
                             <button class="delete-listing-btn" onclick="database.ref('marketplace/job_applications/${key}').remove()" style="position:absolute; right:10px; top:10px; background:none; border:none; color:#ff4444; cursor:pointer;">✕</button>
-                            <h4>${app.role}</h4>
-                            <p style="font-size:12px; color:#aaa;">Handle: ${app.applicantName.toUpperCase()}</p>
-                            <p style="font-size:13px; color:#ccc; margin-top:6px;">${app.skillDescription}</p>
-                            <div style="margin-top: 12px; display: flex; gap: 8px;">
-                                <button onclick="executeSquadHire('${key}', '${app.applicantName}', '${app.role}')" style="background:#38ef7d; color:#111; border:none; padding:6px 12px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:12px;">🤝 HIRE SQUAD MEMBER</button>
+                            <h4 style="margin: 0 0 4px 0;">${app.role}<span style="color:var(--primary); font-size:11px;">${displayTier}</span></h4>
+                            <p style="font-size:12px; color:#aaa; margin: 4px 0;">Handle: <b>${app.applicantName.toUpperCase()}</b>${displayAge}</p>
+                            <p style="font-size:13px; color:#ccc; margin-top:8px; line-height:1.4; background:rgba(0,0,0,0.15); padding:8px; border-radius:4px;">${app.skillDescription}</p>
+                            <div style="margin-top: 12px;">
+                                <button onclick="executeSquadHire('${key}', ${JSON.stringify(app)})" style="background:#38ef7d; color:#111; border:none; padding:6px 12px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:11px; text-transform:uppercase;">🤝 Hire Squad Member</button>
                             </div>
                         </div>`;
                 });
             });
         }
 
-        function executeSquadHire(applicationKey, applicantName, role) {
-            let targetHandle = applicantName.trim().toLowerCase();
+        function executeSquadHire(applicationKey, appObject) {
+            let targetHandle = appObject.applicantName.trim().toLowerCase();
             if (targetHandle === "anonymous_node") {
-                alert("Cannot generate account credentials for an anonymous node profile.");
+                alert("Cannot generate account credentials for an anonymous profile node.");
                 return;
             }
 
-            // 1. Generate a secure, 6-character random PIN/Password for the terminal registry
             let generatedPassword = Math.floor(100000 + Math.random() * 900000).toString();
-
-            // 2. Prepare atomic payload batch mapping updates
             let updates = {};
             
-            // Generate/overwrite system credentials node for the new user
             updates[`marketplace/users/${targetHandle}`] = {
                 username: targetHandle,
                 password: generatedPassword,
-                role: role,
+                role: appObject.role,
+                age: appObject.age || "N/A",
+                experienceTier: appObject.experienceTier || "N/A",
                 hiredTimestamp: Date.now()
             };
 
-            // Inject an instant automated DM notification stream down their chat wire
-            // Using a unique chat channel structure pointing to system operations channel
             let systemChatPath = `marketplace/chats/hired_notification_${targetHandle}`;
             let messageKey = database.ref().child(systemChatPath).push().key;
             
             updates[`${systemChatPath}/${messageKey}`] = {
                 senderName: "SYSTEM_OPS",
-                msgText: `🎉 Congratulations! You have been officially hired as a ${role} for GBWNS! Your local system terminal access account has been generated.`,
+                msgText: `🎉 Welcome to LBPC! You have been officially hired as a ${appObject.role}. Use your unique handle to clear terminal authorizations.`,
                 timestamp: Date.now()
             };
 
-            // Remove the recruitment folder card application from the pipeline desk simultaneously
             updates[`marketplace/job_applications/${applicationKey}`] = null;
 
-            // 3. Commit batch sequence transactions safely down to Firebase RTDB Core
             database.ref().update(updates).then(() => {
-                // 4. Output the raw browser alert confirmation containing the generated credentials
-                alert(`📋 SQUAD ACCOUNT PROVISIONED!\n\nUser Handle: ${targetHandle}\nTemporary System PIN: ${generatedPassword}\nAssigned Designation: ${role}\n\nThis security node profile has been committed to database records.`);
+                alert(`📋 SQUAD ACCOUNT PROVISIONED!\n\nUser Handle: ${targetHandle}\nTemporary System PIN: ${generatedPassword}\nAssigned Designation: ${appObject.role}\n\nThis node profile has been compiled into the squad configuration array.`);
             }).catch(error => {
-                console.error("Firebase Registry Mutation Interruption:", error);
-                alert("Error writing configuration sequences to the network database matrix.");
+                console.error("Firebase Core Execution Failure:", error);
+                alert("Configuration mutation error encountered while compiling system records.");
             });
         }
 
-        function toggleSidebar() { let sb = document.getElementById('sidebar'); if(sb) sb.classList.toggle('active'); }
-        function closeModals() { let m = document.getElementById('sellModal'); if(m) m.style.display = 'none'; resetSellForm(); }
-        function resetSellForm() { document.getElementById('hardwareName').value = ""; document.getElementById('origPrice').value = ""; document.getElementById('aiVal').innerText = "₹0"; computedAppraisalValue = 0; }
-        function toggleCart() { let cp = document.getElementById('cartPanel'); if(cp) cp.classList.toggle('active'); }
-        function openSell() { if(currentUser) document.getElementById('sellModal').style.display = 'flex'; }
-        function closeDMWindow() { document.getElementById('dmBox').style.display = 'none'; }
-        function handleDMKey(e) { if(e.key === 'Enter') sendDMMessage(); }
-        function logoutTerminal() { currentUser = null; localStorage.removeItem('potato_local_session'); let ag = document.getElementById('authGate'); if(ag) ag.style.display = 'flex'; }
+        function syncActiveSquadRoster() {
+            database.ref('marketplace/users').on('value', snapshot => {
+                let rosterGrid = document.getElementById('hiredSquadGrid');
+                if (!rosterGrid) return;
+                rosterGrid.innerHTML = "";
+                let users = snapshot.val();
+                
+                if (!users) {
+                    rosterGrid.innerHTML = `<div style="color:#666; font-size:12px; font-style:italic;">No active roster nodes deployed inside database matrix.</div>`;
+                    return;
+                }
 
-        function switchTab(viewId) {
-            document.querySelectorAll('.app-view').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            let targetView = document.getElementById(viewId); if(targetView) targetView.classList.add('active');
-            let targetBtn = document.getElementById('btn-' + viewId); if(targetBtn) targetBtn.classList.add('active');
-            let sb = document.getElementById('sidebar'); if(sb && sb.classList.contains('active')) toggleSidebar();
+                Object.keys(users).forEach(username => {
+                    let u = users[username];
+                    if (username === 'nafeez' || username === 'admin' || username === 'opsmanager') return;
+
+                    let details = `Age: ${u.age || 'N/A'} • ${u.experienceTier || 'N/A'}`;
+                    rosterGrid.innerHTML += `
+                        <div style="background: var(--card); border: 1px solid var(--border); padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px;">
+                            <div>
+                                <h5 style="margin: 0; font-size: 13px; color: #fff;">${u.username.toUpperCase()} <span style="font-weight:normal; color:#aaa; font-size:11px;">(${u.role})</span></h5>
+                                <p style="margin: 4px 0 0 0; font-size: 11px; color: #777;">${details} • Access PIN: <b style="color:var(--primary); font-family:monospace;">${u.password}</b></p>
+                            </div>
+                            <button onclick="terminateSquadMember('${username}')" style="background:rgba(255,68,68,0.1); color:#ff4444; border:1px solid #ff4444; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">TERMINATE</button>
+                        </div>`;
+                });
+            });
         }
 
-        function filterMarketplace(category) { currentFilterCategory = category; document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active')); renderMarketGrid(); }
-
-        window.onload = function() {
-            let session = localStorage.getItem('potato_local_session');
-            if(session && localAccounts[session]) loginSuccess(session);
-        };
+        function terminateSquadMember(username) {
+            if (!confirm(`Are you completely sure you want to terminate ${username.toUpperCase()}? This immediately wipes their local system terminal access account credentials.`)) return;
+            
+            database.ref(`marketplace/users/${username}`).remove().then(() => {
+                alert(`❌ Node profile [${username.toUpperCase()}] has been terminated and scrubbed from the active squad roster array.`);
+            });
+        }
     </script>
 </body>
 </html>
