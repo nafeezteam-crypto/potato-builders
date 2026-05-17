@@ -87,6 +87,7 @@
         .sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background: var(--card); border-right: 1px solid var(--border); transition: 0.4s; z-index: 2000; padding: 70px 20px; overflow-y: auto; box-sizing: border-box; visibility: hidden; }
         .sidebar.active { left: 0; visibility: visible; }
         .nav-item { padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; font-weight: bold; font-size: 13px; text-transform: uppercase; }
+        .nav-item:hover { color: var(--primary); }
         .admin-only-nav { display: none; border-left: 3px solid #1a73e8; padding-left: 8px; color: #1a73e8; }
 
         /* PC BUILDER STEP SYSTEM WIZARD */
@@ -140,9 +141,6 @@
         body.theme-minimalist .market-tag { background: #e5e5e7; color: #555; }
         .market-tag.prime { background: rgba(1, 148, 11, 0.15); color: var(--primary); }
         body.theme-maximalist .market-tag.prime { background: #ff007f; color: #fff; border: 1px solid #00ffff; }
-        body.theme-maximalist .market-tag.game-tag { background: #00ffff; color: #000; font-style: italic; }
-        .market-item-name { font-size: 16px; font-weight: bold; margin: 0; }
-        .market-item-price { font-size: 18px; font-weight: 900; color: var(--primary); margin: 8px 0; }
         
         .seller-thoughts-box { font-size: 12px; color: #888; font-style: italic; background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 6px; margin-bottom: 12px; border-left: 2px solid var(--primary); }
         .market-action-row { display: flex; gap: 8px; }
@@ -203,7 +201,7 @@
     <div class="sidebar" id="sidebar">
         <div class="nav-item" onclick="switchTab('marketView')">🛒 Browse Store</div>
         <div class="nav-item" onclick="switchTab('buildView')">🖥️ Strategic Configurator</div>
-        <div class="nav-item" onclick="openSell()">⚙️ Appraise & Sell Gear</div>
+        <div class="nav-item" onclick="switchTab('gameVaultView')">🕹️ Game Vault</div> <div class="nav-item" onclick="openSell()">⚙️ Appraise & Sell Gear</div>
         <div class="nav-item admin-only-nav" id="adminSidebarLink" onclick="switchTab('opsView')">📊 Live Order Pipeline</div>
     </div>
 
@@ -239,7 +237,6 @@
             <button class="filter-chip" onclick="filterMarketplace('Component')">Components</button>
             <button class="filter-chip" onclick="filterMarketplace('Full PC')">System Desktops</button>
             <button class="filter-chip" onclick="filterMarketplace('Laptop')">Laptops</button>
-            <button class="filter-chip" style="border-color: #ffd700;" onclick="filterMarketplace('Game')">🕹️ Exclusive Games</button>
         </div>
 
         <div id="terminal-ad-slot" style="background:rgba(0,0,0,0.3); border:1px dashed var(--primary); border-radius:12px; min-height:90px; margin-bottom:25px; display:flex; align-items:center; justify-content:center; color:#666; font-size:11px; text-transform:uppercase; letter-spacing:1px;">
@@ -340,24 +337,51 @@
         </div>
     </div>
 
+    <div class="app-view" id="gameVaultView">
+        <div class="market-header">
+            <h2 style="text-transform: uppercase; margin: 0; font-size: 24px; color: #ffd700; font-style: italic;">🕹️ Arcade Game Vault</h2>
+        </div>
+        <p style="font-size: 13px; color: #888; margin-bottom: 25px;">Download exclusive custom game builds, updates, and HTML5 psychological horror projects deployed by the developer.</p>
+
+        <div id="developerGameConsole" style="display: none; background: rgba(255, 215, 0, 0.03); border: 1px dashed #ffd700; padding: 25px; border-radius: var(--radius); margin-bottom: 30px;">
+            <h4 style="margin-top:0; color:#ffd700; text-transform:uppercase; font-size:14px; letter-spacing:1px;">🚀 Developer Cloud Upload Engine</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                    <label>Game Title / Build Name</label>
+                    <input type="text" id="vaultGameName" placeholder="e.g., Silent Shadow: Level 1-5">
+                </div>
+                <div>
+                    <label>File Share/Download Link (Drive / Itch.io / Web URL)</label>
+                    <input type="url" id="vaultGameUrl" placeholder="https://drive.google.com/uc?export=download&id=...">
+                </div>
+            </div>
+            <label>Patch Notes / Gameplay Description</label>
+            <textarea id="vaultGameDesc" placeholder="Write level constraints, control mappings, or jumpscare features..." rows="2"></textarea>
+            <button onclick="submitGameToVault()" style="background:#ffd700; color:#000; border:none; padding:12px 24px; border-radius:8px; font-weight:bold; cursor:pointer; text-transform:uppercase; font-size:12px;">Deploy Title to Archive</button>
+        </div>
+
+        <div class="market-grid" id="vaultGameGrid">
+            <div style="text-align:center; color:#555; padding:40px; grid-column: 1/-1;">Syncing secure game deployment streams...</div>
+        </div>
+    </div>
+
     <div class="modal" id="sellModal">
         <div class="modal-content">
             <h2 style="margin-top: 0; margin-bottom: 20px; font-size: 20px; text-transform: uppercase;">Post New Listing</h2>
             <label>Hardware/Asset Classification</label>
-            <select id="hardwareType" onchange="toggleGameFields()">
+            <select id="hardwareType">
                 <option value="Component">Component (GPU, CPU, RAM, etc.)</option>
                 <option value="Full PC">Full Desktop PC Setup</option>
                 <option value="Laptop">Laptop Computer</option>
-                <option value="Game" id="gameAuthOption" style="display:none;">🕹️ Game Project (Admin Vault Exclusive)</option>
             </select>
             <label>Item Name / Model Title</label>
-            <input type="text" id="hardwareName" placeholder="e.g., RX 580 8GB, Cyber-Horror Maze Build">
+            <input type="text" id="hardwareName" placeholder="e.g., RX 580 8GB, DDR4 Memory Module">
             <label>Image Thumbnail Link (URL)</label>
             <input type="url" id="hardwareImg" placeholder="Paste image web URL">
             <label>Stock Supply Volume Available</label>
             <input type="number" id="hardwareStock" value="1" min="1">
-            <label>Seller Thoughts / Project Description</label>
-            <textarea id="sellerThoughts" placeholder="Share condition status indicators or game launch info..." rows="3"></textarea>
+            <label>Seller Thoughts / Description</label>
+            <textarea id="sellerThoughts" placeholder="Share condition status indicators..." rows="3"></textarea>
             
             <div id="valuationMathBlock">
                 <label>Original Purchase Price</label>
@@ -451,16 +475,17 @@
             document.getElementById('userDisplayTag').innerText = `USER: ${username.toUpperCase()}`;
             
             listenToMarketplace();
+            listenToGameVault(); // Start tracking game vault entries
             selectCategory('gaming');
             
             let savedTheme = localStorage.getItem('potato_terminal_theme') || 'matrix';
             applyCorporateTheme(savedTheme);
 
-            // EVALUATE EXCLUSIVE GATE CHANNELS FOR GAME SALES
+            // EVALUATE GAME CONSOLE VISIBILITY (Nafeez & Admin get the dashboard)
             if (username === 'nafeez' || username === 'admin') {
-                document.getElementById('gameAuthOption').style.display = 'block';
+                document.getElementById('developerGameConsole').style.display = 'block';
             } else {
-                document.getElementById('gameAuthOption').style.display = 'none';
+                document.getElementById('developerGameConsole').style.display = 'none';
             }
 
             // EVALUATE HIGH LEVEL ACCESS PRIVILEGES FOR OPERATIONS
@@ -723,8 +748,6 @@
 
         function renderMarketGrid() {
             let grid = document.getElementById('marketGrid'); grid.innerHTML = "";
-            
-            // APPLY EXCLUSIVE CATEGORY FILTERING
             let itemsToDisplay = marketItems;
             if(currentFilterCategory !== 'all') {
                 itemsToDisplay = marketItems.filter(i => i.type === currentFilterCategory);
@@ -743,18 +766,14 @@
                     : `<button onclick="addToCart('${item.id}', '${item.title}', ${item.price})" style="background:var(--primary); border:none; color:white; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:bold;">🛒 +</button>`;
                 let deleteBtn = (currentUser && item.sellerName === currentUser) ? `<button class="delete-listing-btn" onclick="deleteMarketItem('${item.id}')">✖</button>` : "";
                 
-                // STYLING CUSTOM ADJUSTMENTS FOR THE EXCLUSIVE GAME CLASSIFICATION
-                let typeBadgeClass = item.type === "Game" ? "market-tag prime game-tag" : "market-tag prime";
-                let titleColorStyle = item.type === "Game" ? "color: #ffd700; font-style: italic;" : "";
-
                 grid.innerHTML += `
-                    <div class="market-card" style="${item.type === 'Game' ? 'border: 1px dashed #ffd700;' : ''}">
+                    <div class="market-card">
                         ${deleteBtn}
                         <div class="market-img-container"><img src="${imgUrl}" class="market-img" onerror="this.src='https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400'"></div>
                         <div class="market-details">
                             <div>
-                                <div class="market-item-name" style="${titleColorStyle}">HTML5 Game // ${item.title}</div>
-                                <div class="market-tag-container"><span class="${typeBadgeClass}">${item.type.toUpperCase()}</span><span class="market-tag">Stock: ${stockCount}</span></div>
+                                <div class="market-item-name">${item.title}</div>
+                                <div class="market-tag-container"><span class="market-tag prime">${item.type.toUpperCase()}</span><span class="market-tag">Stock: ${stockCount}</span></div>
                                 ${item.thoughts ? `<div class="seller-thoughts-box"><b>${item.sellerName}:</b> "${item.thoughts}"</div>` : ''}
                                 <div class="market-item-price">₹${item.price.toLocaleString('en-IN')}</div>
                             </div>
@@ -776,7 +795,6 @@
             document.getElementById('cartTotalValue').innerText = "₹" + total.toLocaleString('en-IN');
         }
 
-        // REMOVED ALL COD LOGIC MODULES — INSTANT DIRECT ESCROW SETUPS
         function checkoutTerminal() {
             if(cart.length === 0) return;
             let updates = {};
@@ -827,37 +845,9 @@
             database.ref(activeDMPath).push({ senderName: currentUser, msgText: txt, timestamp: Date.now() }).then(() => { el.value = ""; });
         }
 
-        function openSell() { 
-            if(!currentUser) return; 
-            document.getElementById('sellModal').style.display = 'flex'; 
-            toggleGameFields();
-        }
-
-        // EXCLUSIVE ADMIN GAME VALUE CONTROLS
-        function toggleGameFields() {
-            let type = document.getElementById('hardwareType').value;
-            let mathBlock = document.getElementById('valuationMathBlock');
-            let valLabel = document.getElementById('valLabel');
-            let aiValDisplay = document.getElementById('aiVal');
-
-            if (type === "Game") {
-                // Completely hide used appraisal math for your games
-                mathBlock.style.display = 'none';
-                valLabel.innerText = "DIRECT EXCLUSIVE FIXED SALE PRICE";
-                
-                // Allow direct manual entry instead of algorithmic depreciation drops
-                let directPrice = prompt("Enter the precise fixed sale price for this game build (₹):", "499");
-                computedAppraisalValue = parseInt(directPrice) || 499;
-                aiValDisplay.innerText = "₹" + computedAppraisalValue.toLocaleString('en-IN');
-            } else {
-                mathBlock.style.display = 'block';
-                valLabel.innerText = "LIVE VALUATION ESTIMATE";
-                calculateHardwareValue();
-            }
-        }
+        function openSell() { if(!currentUser) return; document.getElementById('sellModal').style.display = 'flex'; }
 
         function calculateHardwareValue() {
-            if(document.getElementById('hardwareType').value === "Game") return;
             let orig = parseFloat(document.getElementById('origPrice').value) || 0;
             let cond = parseFloat(document.getElementById('hardwareCondition').value);
             computedAppraisalValue = Math.round(orig * 0.60 * cond);
@@ -870,23 +860,13 @@
             document.getElementById('hardwareStock').value = "1";
             document.getElementById('sellerThoughts').value = "";
             document.getElementById('origPrice').value = "";
-            document.getElementById('hardwareType').value = "Component";
             computedAppraisalValue = 0;
             document.getElementById('aiVal').innerText = "₹0";
         }
 
         function submitSell() {
             let title = document.getElementById('hardwareName').value.trim();
-            let assetType = document.getElementById('hardwareType').value;
-            
             if(!title || computedAppraisalValue <= 0) return;
-            
-            // Hard security check block to prevent fraud spoof inputs
-            if (assetType === "Game" && currentUser !== 'nafeez' && currentUser !== 'admin') {
-                alert("SECURITY EXCEPTION DETECTED: Only authorized creator handles can publish assets to the Game Core pipeline!");
-                closeModals();
-                return;
-            }
 
             database.ref('marketplace/items').push({ 
                 title: title, 
@@ -894,13 +874,86 @@
                 stocks: parseInt(document.getElementById('hardwareStock').value) || 1, 
                 thoughts: document.getElementById('sellerThoughts').value.trim(), 
                 price: computedAppraisalValue, 
-                type: assetType, 
+                type: document.getElementById('hardwareType').value, 
                 sellerName: currentUser, 
                 timestamp: Date.now() 
             }).then(() => closeModals());
         }
 
         function deleteMarketItem(id) { if(confirm("Strip entry?")) database.ref(`marketplace/items/${id}`).remove(); }
+
+        // 📡 REALTIME ENGINE LISTENER: MONITOR VAULT ARCHIVE CHANGES
+        function listenToGameVault() {
+            database.ref('marketplace/vault_games').on('value', snapshot => {
+                let grid = document.getElementById('vaultGameGrid');
+                grid.innerHTML = "";
+                let games = snapshot.val();
+
+                if (!games) {
+                    grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#555; padding:40px;">No digital titles uploaded to this directory yet.</div>`;
+                    return;
+                }
+
+                Object.keys(games).reverse().forEach(key => {
+                    let game = games[key];
+                    let devKillBtn = (currentUser === 'nafeez' || currentUser === 'admin') 
+                        ? `<button class="delete-listing-btn" onclick="deleteGameFromVault('${key}')">✖</button>` 
+                        : "";
+
+                    grid.innerHTML += `
+                        <div class="market-card" style="border: 1px dashed #ffd700; background: linear-gradient(145deg, #101010, #050505);">
+                            ${devKillBtn}
+                            <div class="market-details" style="padding: 20px; min-height: 180px;">
+                                <div>
+                                    <h3 style="margin:0 0 8px 0; color:#ffd700; font-style:italic;">🎮 ${game.title.toUpperCase()}</h3>
+                                    <p style="font-size:12px; color:#aaa; line-height:1.5; margin-bottom:15px; background:rgba(255,255,255,0.02); padding:10px; border-left:2px solid #ffd700; border-radius:4px;">
+                                        ${game.description || 'No build logs provided by the creator.'}
+                                    </p>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:auto;">
+                                    <span style="font-size:10px; color:#555; font-weight:bold;">BY: ${game.uploader.toUpperCase()}</span>
+                                    <a href="${game.downloadUrl}" target="_blank" style="text-decoration:none;">
+                                        <button style="background:#ffd700; color:#000; border:none; padding:10px 16px; border-radius:6px; font-weight:900; cursor:pointer; font-size:12px;">
+                                            📥 DOWNLOAD BUILD
+                                        </button>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>`;
+                });
+            });
+        }
+
+        // 💾 WRITE MODULE: ADD GAME TO ARCHIVE
+        function submitGameToVault() {
+            let title = document.getElementById('vaultGameName').value.trim();
+            let url = document.getElementById('vaultGameUrl').value.trim();
+            let desc = document.getElementById('vaultGameDesc').value.trim();
+
+            if (!title || !url) { alert("Game Title and File Target Link are required nodes!"); return; }
+            if (currentUser !== 'nafeez' && currentUser !== 'admin') { alert("Security Exception: Access Denied."); return; }
+
+            database.ref('marketplace/vault_games').push({
+                title: title,
+                downloadUrl: url,
+                description: desc,
+                uploader: currentUser,
+                timestamp: Date.now()
+            }).then(() => {
+                document.getElementById('vaultGameName').value = "";
+                document.getElementById('vaultGameUrl').value = "";
+                document.getElementById('vaultGameDesc').value = "";
+                alert("🕹️ Title packaged and written to live Arcade Vault stream parameters successfully!");
+            }).catch(e => alert("Database Error: " + e.message));
+        }
+
+        // 🔨 DESTROY MODULE: REMOVE GAME ENTRY VIA ID
+        function deleteGameFromVault(id) {
+            if (confirm("Are you sure you want to purge this game build from the active database?")) {
+                database.ref(`marketplace/vault_games/${id}`).remove()
+                    .then(() => alert("Entry stripped from archive array logs."));
+            }
+        }
     </script>
 </body>
 </html>
