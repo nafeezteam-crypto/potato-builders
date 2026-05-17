@@ -515,7 +515,7 @@
             localStorage.setItem('potato_terminal_theme', themeName);
         }
 
-        function handleTerminalLogin() {
+function handleTerminalLogin() {
             let userField = document.getElementById('authUsername').value.trim().toLowerCase();
             let passField = document.getElementById('authPassword').value.trim();
 
@@ -550,25 +550,10 @@
                 console.error("Auth Matrix Interruption:", error);
                 alert("System connection error during authorization verification.");
             });
-        }
+        } // <-- Exactly ONE bracket here closes the function cleanly.
 
-            // 2. If it's not a local account, check the Firebase dynamic squad registry
-            database.ref(`marketplace/users/${userField}`).once('value', snapshot => {
-                let dbUser = snapshot.val();
-                
-                if (dbUser && dbUser.password === passField) {
-                    // PIN matches! Clear them through the authentication gate
-                    loginSuccess(userField);
-                } else {
-                    // Node doesn't exist or PIN is wrong
-                    alert("ACCESS DENIED: Credentials not found in active squad array.");
-                }
-            }).catch(error => {
-                console.error("Auth Matrix Interruption:", error);
-                alert("System connection error during authorization verification.");
-            });
-        }
-
+        // Make sure your next tool starts right below it without any lone floating brackets!
+        function toggleSidebar() { let sb = document.getElementById('sidebar'); if(sb) sb.classList.toggle('active'); }
         function loginSuccess(username) {
             currentUser = username;
             localStorage.setItem('potato_local_session', username);
