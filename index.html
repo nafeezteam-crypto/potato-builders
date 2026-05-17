@@ -343,22 +343,32 @@
         </div>
         <p style="font-size: 13px; color: #888; margin-bottom: 25px;">Download exclusive custom game builds, updates, and HTML5 psychological horror projects deployed by the developer.</p>
 
-        <div id="developerGameConsole" style="display: none; background: rgba(255, 215, 0, 0.03); border: 1px dashed #ffd700; padding: 25px; border-radius: var(--radius); margin-bottom: 30px;">
-            <h4 style="margin-top:0; color:#ffd700; text-transform:uppercase; font-size:14px; letter-spacing:1px;">🚀 Developer Cloud Upload Engine</h4>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                <div>
-                    <label>Game Title / Build Name</label>
-                    <input type="text" id="vaultGameName" placeholder="e.g., Silent Shadow: Level 1-5">
-                </div>
-                <div>
-                    <label>File Share/Download Link (Drive / Itch.io / Web URL)</label>
-                    <input type="url" id="vaultGameUrl" placeholder="https://drive.google.com/uc?export=download&id=...">
-                </div>
-            </div>
-            <label>Patch Notes / Gameplay Description</label>
-            <textarea id="vaultGameDesc" placeholder="Write level constraints, control mappings, or jumpscare features..." rows="2"></textarea>
-            <button onclick="submitGameToVault()" style="background:#ffd700; color:#000; border:none; padding:12px 24px; border-radius:8px; font-weight:bold; cursor:pointer; text-transform:uppercase; font-size:12px;">Deploy Title to Archive</button>
+<div id="developerGameConsole" style="display: none; background: rgba(255, 215, 0, 0.03); border: 1px dashed #ffd700; padding: 25px; border-radius: var(--radius); margin-bottom: 30px;">
+    <h4 style="margin-top:0; color:#ffd700; text-transform:uppercase; font-size:14px; letter-spacing:1px;">🚀 Developer Cloud Upload Engine</h4>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+        <div>
+            <label>Game Title / Build Name</label>
+            <input type="text" id="vaultGameName" placeholder="e.g., Silent Shadow: Level 1-5">
         </div>
+        <div>
+            <label>File Target Link (Drive / Itch.io)</label>
+            <input type="url" id="vaultGameUrl" placeholder="https://drive.google.com/...">
+        </div>
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+        <div>
+            <label>Game Price (Set 0 for Free Build)</label>
+            <input type="number" id="vaultGamePrice" placeholder="Price (₹)" value="0">
+        </div>
+        <div>
+            <label>Game Cover Image URL</label>
+            <input type="url" id="vaultGameImg" placeholder="Paste image web address URL">
+        </div>
+    </div>
+    <label>Patch Notes / Gameplay Description</label>
+    <textarea id="vaultGameDesc" placeholder="Write level constraints, control mappings, or jumpscare features..." rows="2"></textarea>
+    <button onclick="submitGameToVault()" style="background:#ffd700; color:#000; border:none; padding:12px 24px; border-radius:8px; font-weight:bold; cursor:pointer; text-transform:uppercase; font-size:12px;">Deploy Title to Archive</button>
+</div>
 
         <div class="market-grid" id="vaultGameGrid">
             <div style="text-align:center; color:#555; padding:40px; grid-column: 1/-1;">Syncing secure game deployment streams...</div>
@@ -882,47 +892,85 @@
 
         function deleteMarketItem(id) { if(confirm("Strip entry?")) database.ref(`marketplace/items/${id}`).remove(); }
 
-        // 📡 REALTIME ENGINE LISTENER: MONITOR VAULT ARCHIVE CHANGES
-        function listenToGameVault() {
-            database.ref('marketplace/vault_games').on('value', snapshot => {
-                let grid = document.getElementById('vaultGameGrid');
-                grid.innerHTML = "";
-                let games = snapshot.val();
+// 📡 MONITOR VAULT ARCHIVE CHANGES (ANONYMOUS PRESETS)
+function listenToGameVault() {
+    database.ref('marketplace/vault_games').on('value', snapshot => {
+        let grid = document.getElementById('vaultGameGrid');
+        grid.innerHTML = "";
+        let games = snapshot.val();
 
-                if (!games) {
-                    grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#555; padding:40px;">No digital titles uploaded to this directory yet.</div>`;
-                    return;
-                }
-
-                Object.keys(games).reverse().forEach(key => {
-                    let game = games[key];
-                    let devKillBtn = (currentUser === 'nafeez' || currentUser === 'admin') 
-                        ? `<button class="delete-listing-btn" onclick="deleteGameFromVault('${key}')">✖</button>` 
-                        : "";
-
-                    grid.innerHTML += `
-                        <div class="market-card" style="border: 1px dashed #ffd700; background: linear-gradient(145deg, #101010, #050505);">
-                            ${devKillBtn}
-                            <div class="market-details" style="padding: 20px; min-height: 180px;">
-                                <div>
-                                    <h3 style="margin:0 0 8px 0; color:#ffd700; font-style:italic;">🎮 ${game.title.toUpperCase()}</h3>
-                                    <p style="font-size:12px; color:#aaa; line-height:1.5; margin-bottom:15px; background:rgba(255,255,255,0.02); padding:10px; border-left:2px solid #ffd700; border-radius:4px;">
-                                        ${game.description || 'No build logs provided by the creator.'}
-                                    </p>
-                                </div>
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:auto;">
-                                    <span style="font-size:10px; color:#555; font-weight:bold;">BY: ${game.uploader.toUpperCase()}</span>
-                                    <a href="${game.downloadUrl}" target="_blank" style="text-decoration:none;">
-                                        <button style="background:#ffd700; color:#000; border:none; padding:10px 16px; border-radius:6px; font-weight:900; cursor:pointer; font-size:12px;">
-                                            📥 DOWNLOAD BUILD
-                                        </button>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>`;
-                });
-            });
+        if (!games) {
+            grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#555; padding:40px;">No digital titles uploaded to this directory yet.</div>`;
+            return;
         }
+
+        Object.keys(games).reverse().forEach(key => {
+            let game = games[key];
+            let devKillBtn = (currentUser === 'nafeez' || currentUser === 'admin') 
+                ? `<button class="delete-listing-btn" onclick="deleteGameFromVault('${key}')">✖</button>` 
+                : "";
+            
+            // Set default background image if custom photo isn't supplied
+            let imgSource = game.imageUrl ? game.imageUrl : "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=500";
+            let displayPrice = (parseInt(game.price) === 0 || !game.price) ? "FREE BUILD" : `₹${parseInt(game.price).toLocaleString('en-IN')}`;
+
+            grid.innerHTML += `
+                <div class="market-card" style="border: 1px dashed #ffd700; background: linear-gradient(145deg, #101010, #050505);">
+                    ${devKillBtn}
+                    <div class="market-img-container" style="height: 130px;">
+                        <img src="${imgSource}" class="market-img" onerror="this.src='https://images.unsplash.com/photo-1542751371-adc38448a05e?w=500'">
+                    </div>
+                    <div class="market-details" style="padding: 20px; min-height: 160px;">
+                        <div>
+                            <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                                <h3 style="margin:0 0 8px 0; color:#ffd700; font-style:italic;">🎮 ${game.title.toUpperCase()}</h3>
+                                <span style="font-size:11px; color:#ffd700; font-weight:bold; letter-spacing:0.5px;">${displayPrice}</span>
+                            </div>
+                            <p style="font-size:12px; color:#aaa; line-height:1.5; margin-bottom:15px; background:rgba(255,255,255,0.02); padding:10px; border-left:2px solid #ffd700; border-radius:4px;">
+                                ${game.description || 'No build logs provided by the creator.'}
+                            </p>
+                        </div>
+                        <div style="display:flex; justify-content:flex-end; align-items:center; margin-top:auto;">
+                            <a href="${game.downloadUrl}" target="_blank" style="text-decoration:none;">
+                                <button style="background:#ffd700; color:#000; border:none; padding:10px 16px; border-radius:6px; font-weight:900; cursor:pointer; font-size:12px;">
+                                    📥 DOWNLOAD BUILD
+                                </button>
+                            </a>
+                        </div>
+                    </div>
+                </div>`;
+        });
+    });
+}
+
+// 💾 WRITE MODULE WITH NEW EXTENDED METADATA
+function submitGameToVault() {
+    let title = document.getElementById('vaultGameName').value.trim();
+    let url = document.getElementById('vaultGameUrl').value.trim();
+    let desc = document.getElementById('vaultGameDesc').value.trim();
+    let price = document.getElementById('vaultGamePrice').value.trim();
+    let img = document.getElementById('vaultGameImg').value.trim();
+
+    if (!title || !url) { alert("Game Title and File Target Link are required nodes!"); return; }
+    if (currentUser !== 'nafeez' && currentUser !== 'admin') { alert("Security Exception: Access Denied."); return; }
+
+    database.ref('marketplace/vault_games').push({
+        title: title,
+        downloadUrl: url,
+        description: desc,
+        price: price ? parseInt(price) : 0,
+        imageUrl: img,
+        uploader: currentUser, // Stored safely inside backend metadata array, but hidden from public layout cards
+        timestamp: Date.now()
+    }).then(() => {
+        document.getElementById('vaultGameName').value = "";
+        document.getElementById('vaultGameUrl').value = "";
+        document.getElementById('vaultGameDesc').value = "";
+        document.getElementById('vaultGamePrice').value = "0";
+        document.getElementById('vaultGameImg').value = "";
+        alert("🕹️ Title packaged and written to live Arcade Vault stream parameters successfully!");
+    }).catch(e => alert("Database Error: " + e.message));
+}
 
         // 💾 WRITE MODULE: ADD GAME TO ARCHIVE
         function submitGameToVault() {
