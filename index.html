@@ -1001,6 +1001,204 @@ function submitJobApplication() {
             });
         }
 
+function submitJobApplication() {
+            let ageVal = document.getElementById('jobAge').value.trim();
+            let skillsVal = document.getElementById('jobSkills').value.trim();
+            
+            if (!ageVal || !skillsVal) {
+                alert("Please fill in your Age and Experience data before submitting.");
+                return;
+            }
+
+            database.ref('marketplace/job_applications').push({
+                applicantName: currentUser || "anonymous_node",
+                role: document.getElementById('jobRole').value,
+                age: parseInt(ageVal),
+                experienceTier: document.getElementById('jobExp').value,
+                skillDescription: skillsVal,
+                timestamp: Date.now()
+            }).then(() => {
+                document.getElementById('jobSkills').value = "";
+                document.getElementById('jobAge').value = "";
+                alert("🚀 Application Packet Shared! The squad operators have logged your details.");
+            });
+        }
+
+        function syncHRApplications() {
+            database.ref('marketplace/job_applications').on('value', snapshot => {
+                let hrGrid = document.getElementById('hrOpsGrid');
+                if (!hrGrid) return;
+                hrGrid.innerHTML = "";
+                let applications = snapshot.val();
+                if (!applications) {
+                    hrGrid.innerHTML = `<div style="color:#555; font-size:13px; padding:10px;">No incoming application packets sitting on the desk.</div>`;
+                    return;
+                }
+                
+                Object.keys(applications).forEach(key => {
+                    let app = applications[key];
+                    let displayAge = app.age ? ` • Age: ${app.age}` : "";
+                    let displayTier = app.experienceTier ? ` [${app.experienceTier}]` : "";
+                    
+                    hrGrid.innerHTML += `
+                        <div class="ops-order-card" style="border-left: 4px solid #38ef7d; position:relative; padding:15px; background:var(--card); margin-bottom:10px; border-radius:8px;">
+                            <button class="delete-listing-btn" onclick="database.ref('marketplace/job_applications/${key}').remove()" style="position:absolute; right:10px; top:10px; background:none; border:none; color:#ff4444; cursor:pointer;">✕</button>
+                            <h4 style="margin: 0 0 4px 0;">${app.role}<span style="color:var(--primary); font-size:11px;">${displayTier}</span></h4>
+                            <p style="font-size:12px; color:#aaa; margin: 4px 0;">Handle: <b>${app.applicantName.toUpperCase()}</b>${displayAge}</p>
+                            <p style="font-size:13px; color:#ccc; margin-top:8px; line-height:1.4; background:rgba(0,0,0,0.15); padding:8px; border-radius:4px;">${app.skillDescription}</p>
+                            <div style="margin-top: 12px;">
+                                <button onclick="executeSquadHire('${key}')" style="background:#38ef7d; color:#111; border:none; padding:6px 12px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:11px; text-transform:uppercase;">🤝 Hire Squad Member</button>
+                            </div>
+                        </div>`;
+                });
+            });
+        }
+
+        function executeSquadHire(applicationKey) {
+            database.ref(`marketplace/job_applications/${applicationKey}`).once('value', snapshot => {
+                let appObject = snapshot.val();
+                if (!appObject) {
+                    alert("Application data could not be located in database matrices.");
+                    return;
+                }
+
+                let targetHandle = appObject.applicantName.trim().toLowerCase();
+                if (targetHandle === "anonymous_node" || !targetHandle) {
+                    alert("Cannot generate account credentials for an anonymous profile node.");
+                    return;
+                }
+
+                let generatedPassword = Math.floor(100000 + Math.random() * 900000).toString();
+                let updates = {};
+                
+                updates[`marketplace/users/${targetHandle}`] = {
+                    username: targetHandle,
+                    password: generatedPassword,
+                    role: appObject.role,
+                    age: appObject.age || "N/A",
+                    experienceTier: appObject.experienceTier || "N/A",
+                    hiredTimestamp: Date.now()
+                };
+
+                let systemChatPath = `marketplace/chats/hired_notification_${targetHandle}`;
+                let messageKey = database.ref().child(systemChatPath).push().key;
+                
+                updates[`${systemChatPath}/${messageKey}`] = {
+                    senderName: "SYSTEM_OPS",
+                    msgText: `🎉 Welcome to GBWNS! You have been officially hired as a ${appObject.role}. Use your unique handle to clear terminal authorizations.`,
+                    timestamp: Date.now()
+                };
+
+                updates[`marketplace/job_applications/${applicationKey}`] = null;
+
+                database.ref().update(updates).then(() => {
+                    alert(`📋 SQUAD ACCOUNT PROVISIONED!\n\nUser Handle: ${targetHandle}\nTemporary System PIN: ${generatedPassword}\nAssigned Designation: ${appObject.role}\n\nThis node profile has been compiled into the squad configuration array.`);
+                }).catch(error => {
+                    console.error("Firebase Core Execution Failure:", error);
+                    alert("Configuration mutation error encountered while compiling system records.");
+                });
+            });
+        }
+
+function submitJobApplication() {
+            let ageVal = document.getElementById('jobAge').value.trim();
+            let skillsVal = document.getElementById('jobSkills').value.trim();
+            
+            if (!ageVal || !skillsVal) {
+                alert("Please fill in your Age and Experience data before submitting.");
+                return;
+            }
+
+            database.ref('marketplace/job_applications').push({
+                applicantName: currentUser || "anonymous_node",
+                role: document.getElementById('jobRole').value,
+                age: parseInt(ageVal),
+                experienceTier: document.getElementById('jobExp').value,
+                skillDescription: skillsVal,
+                timestamp: Date.now()
+            }).then(() => {
+                document.getElementById('jobSkills').value = "";
+                document.getElementById('jobAge').value = "";
+                alert("🚀 Application Packet Shared! The squad operators have logged your details.");
+            });
+        }
+
+        function syncHRApplications() {
+            database.ref('marketplace/job_applications').on('value', snapshot => {
+                let hrGrid = document.getElementById('hrOpsGrid');
+                if (!hrGrid) return;
+                hrGrid.innerHTML = "";
+                let applications = snapshot.val();
+                if (!applications) {
+                    hrGrid.innerHTML = `<div style="color:#555; font-size:13px; padding:10px;">No incoming application packets sitting on the desk.</div>`;
+                    return;
+                }
+                
+                Object.keys(applications).forEach(key => {
+                    let app = applications[key];
+                    let displayAge = app.age ? ` • Age: ${app.age}` : "";
+                    let displayTier = app.experienceTier ? ` [${app.experienceTier}]` : "";
+                    
+                    hrGrid.innerHTML += `
+                        <div class="ops-order-card" style="border-left: 4px solid #38ef7d; position:relative; padding:15px; background:var(--card); margin-bottom:10px; border-radius:8px;">
+                            <button class="delete-listing-btn" onclick="database.ref('marketplace/job_applications/${key}').remove()" style="position:absolute; right:10px; top:10px; background:none; border:none; color:#ff4444; cursor:pointer;">✕</button>
+                            <h4 style="margin: 0 0 4px 0;">${app.role}<span style="color:var(--primary); font-size:11px;">${displayTier}</span></h4>
+                            <p style="font-size:12px; color:#aaa; margin: 4px 0;">Handle: <b>${app.applicantName.toUpperCase()}</b>${displayAge}</p>
+                            <p style="font-size:13px; color:#ccc; margin-top:8px; line-height:1.4; background:rgba(0,0,0,0.15); padding:8px; border-radius:4px;">${app.skillDescription}</p>
+                            <div style="margin-top: 12px;">
+                                <button onclick="executeSquadHire('${key}')" style="background:#38ef7d; color:#111; border:none; padding:6px 12px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:11px; text-transform:uppercase;">🤝 Hire Squad Member</button>
+                            </div>
+                        </div>`;
+                });
+            });
+        }
+
+        function executeSquadHire(applicationKey) {
+            database.ref(`marketplace/job_applications/${applicationKey}`).once('value', snapshot => {
+                let appObject = snapshot.val();
+                if (!appObject) {
+                    alert("Application data could not be located in database matrices.");
+                    return;
+                }
+
+                let targetHandle = appObject.applicantName.trim().toLowerCase();
+                if (targetHandle === "anonymous_node" || !targetHandle) {
+                    alert("Cannot generate account credentials for an anonymous profile node.");
+                    return;
+                }
+
+                let generatedPassword = Math.floor(100000 + Math.random() * 900000).toString();
+                let updates = {};
+                
+                updates[`marketplace/users/${targetHandle}`] = {
+                    username: targetHandle,
+                    password: generatedPassword,
+                    role: appObject.role,
+                    age: appObject.age || "N/A",
+                    experienceTier: appObject.experienceTier || "N/A",
+                    hiredTimestamp: Date.now()
+                };
+
+                let systemChatPath = `marketplace/chats/hired_notification_${targetHandle}`;
+                let messageKey = database.ref().child(systemChatPath).push().key;
+                
+                updates[`${systemChatPath}/${messageKey}`] = {
+                    senderName: "SYSTEM_OPS",
+                    msgText: `🎉 Welcome to GBWNS! You have been officially hired as a ${appObject.role}. Use your unique handle to clear terminal authorizations.`,
+                    timestamp: Date.now()
+                };
+
+                updates[`marketplace/job_applications/${applicationKey}`] = null;
+
+                database.ref().update(updates).then(() => {
+                    alert(`📋 SQUAD ACCOUNT PROVISIONED!\n\nUser Handle: ${targetHandle}\nTemporary System PIN: ${generatedPassword}\nAssigned Designation: ${appObject.role}\n\nThis node profile has been compiled into the squad configuration array.`);
+                }).catch(error => {
+                    console.error("Firebase Core Execution Failure:", error);
+                    alert("Configuration mutation error encountered while compiling system records.");
+                });
+            });
+        }
+
         function syncActiveSquadRoster() {
             database.ref('marketplace/users').on('value', snapshot => {
                 let rosterGrid = document.getElementById('hiredSquadGrid');
@@ -1030,13 +1228,13 @@ function submitJobApplication() {
             });
         }
 
-function terminateSquadMember(username) {
+        function terminateSquadMember(username) {
             if (!confirm(`Are you completely sure you want to terminate ${username.toUpperCase()}? This immediately wipes their local system terminal access account credentials.`)) return;
             
             database.ref(`marketplace/users/${username}`).remove().then(() => {
                 alert(`❌ Node profile [${username.toUpperCase()}] has been terminated and scrubbed from the active squad roster array.`);
             });
-        } // <-- Added this missing bracket to fix the error!
+        }
 
         function toggleSidebar() { let sb = document.getElementById('sidebar'); if(sb) sb.classList.toggle('active'); }
         function closeModals() { let m = document.getElementById('sellModal'); if(m) m.style.display = 'none'; resetSellForm(); }
