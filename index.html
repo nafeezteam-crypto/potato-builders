@@ -516,14 +516,40 @@
         }
 
         function handleTerminalLogin() {
-            let user = document.getElementById('authUsername').value.trim().toLowerCase();
-            let pass = document.getElementById('authPassword').value.trim();
-            if(!user || !pass) { alert("Please input credentials."); return; }
-            if (localAccounts[user] && localAccounts[user] === pass) {
-                loginSuccess(user);
-            } else {
-                alert("Access Denied!");
+            let userField = document.getElementById('authUsername').value.trim().toLowerCase();
+            let passField = document.getElementById('authPassword').value.trim();
+
+            if (!userField || !passField) {
+                alert("Please enter both your system handle and access PIN.");
+                return;
             }
+
+            // 1. First check if it's an admin/hardcoded local account
+            if (typeof localAccounts !== 'undefined' && localAccounts[userField]) {
+                if (localAccounts[userField].password === passField) {
+                    loginSuccess(userField);
+                    return;
+                } else {
+                    alert("ACCESS DENIED: Invalid Administrative Credentials.");
+                    return;
+                }
+            }
+
+            // 2. If it's not a local account, check the Firebase dynamic squad registry
+            database.ref(`marketplace/users/${userField}`).once('value', snapshot => {
+                let dbUser = snapshot.val();
+                
+                if (dbUser && dbUser.password === passField) {
+                    // PIN matches! Clear them through the authentication gate
+                    loginSuccess(userField);
+                } else {
+                    // Node doesn't exist or PIN is wrong
+                    alert("ACCESS DENIED: Credentials not found in active squad array.");
+                }
+            }).catch(error => {
+                console.error("Auth Matrix Interruption:", error);
+                alert("System connection error during authorization verification.");
+            });
         }
 
         function loginSuccess(username) {
