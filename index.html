@@ -710,29 +710,74 @@
             }).then(() => { document.getElementById('jobSkills').value = ""; alert("Application Packet Shared!"); });
         }
 
-        function syncHRApplications() {
+function syncHRApplications() {
             database.ref('marketplace/job_applications').on('value', snapshot => {
                 let hrGrid = document.getElementById('hrOpsGrid'); if(!hrGrid) return;
-                hrGrid.innerHTML = ""; let applications = snapshot.val(); if (!applications) return;
+                hrGrid.innerHTML = "";
+                let applications = snapshot.val(); if (!applications) return;
+                
                 Object.keys(applications).forEach(key => {
                     let app = applications[key];
+                    let applicantHandle = app.applicantName.toLowerCase();
+                    
                     hrGrid.innerHTML += `
-                        <div style="border-left: 4px solid var(--primary); padding:15px; background: #151515; border-radius:8px; position:relative;">
-                            <button onclick="database.ref('marketplace/job_applications/${key}').remove()" style="position:absolute; right:10px; top:10px; background:none; border:none; color:#ff4444; cursor:pointer; font-weight:bold;">✕</button>
-                            <h4 style="margin:0 0 4px 0;">${app.role}</h4>
-                            <p style="font-size:12px; color:#aaa; margin:0;">Handle: <b>${app.applicantName.toUpperCase()}</b></p>
-                            <p style="font-size:13px; color:#ccc; margin-top:8px;">${app.skillDescription}</p>
+                        <div class="ops-order-card" style="border-left: 4px solid #38ef7d; position:relative; padding:15px; background:var(--card); margin-bottom:10px; border-radius:8px;">
+                            <button class="delete-listing-btn" onclick="database.ref('marketplace/job_applications/${key}').remove()" style="position:absolute; right:10px; top:10px; background:none; border:none; color:#ff4444; cursor:pointer;">✕</button>
+                            <h4>${app.role}</h4>
+                            <p style="font-size:12px; color:#aaa;">Handle: ${app.applicantName.toUpperCase()}</p>
+                            <p style="font-size:13px; color:#ccc; margin-top:6px;">${app.skillDescription}</p>
+                            <div style="margin-top: 12px; display: flex; gap: 8px;">
+                                <button onclick="executeSquadHire('${key}', '${app.applicantName}', '${app.role}')" style="background:#38ef7d; color:#111; border:none; padding:6px 12px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:12px;">🤝 HIRE SQUAD MEMBER</button>
+                            </div>
                         </div>`;
                 });
             });
         }
 
-        function logoutTerminal() { currentUser = null; localStorage.removeItem('potato_local_session'); document.getElementById('authGate').style.display = 'flex'; document.getElementById('userDisplayTag').innerText = "USER: DISCONNECTED"; }
+        function executeSquadHire(applicationKey, applicantName, role) {
+            let targetHandle = applicantName.trim().toLowerCase();
+            if (targetHandle === "anonymous_node") {
+                alert("Cannot generate account credentials for an anonymous node profile.");
+                return;
+            }
 
-        window.onload = function() {
-            let session = localStorage.getItem('potato_local_session');
-            if(session && localAccounts[session]) loginSuccess(session);
-        };
+            // 1. Generate a secure, 6-character random PIN/Password for the terminal registry
+            let generatedPassword = Math.floor(100000 + Math.random() * 900000).toString();
+
+            // 2. Prepare atomic payload batch mapping updates
+            let updates = {};
+            
+            // Generate/overwrite system credentials node for the new user
+            updates[`marketplace/users/${targetHandle}`] = {
+                username: targetHandle,
+                password: generatedPassword,
+                role: role,
+                hiredTimestamp: Date.now()
+            };
+
+            // Inject an instant automated DM notification stream down their chat wire
+            // Using a unique chat channel structure pointing to system operations channel
+            let systemChatPath = `marketplace/chats/hired_notification_${targetHandle}`;
+            let messageKey = database.ref().child(systemChatPath).push().key;
+            
+            updates[`${systemChatPath}/${messageKey}`] = {
+                senderName: "SYSTEM_OPS",
+                msgText: `🎉 Congratulations! You have been officially hired as a ${role} for GBWNS! Your local system terminal access account has been generated.`,
+                timestamp: Date.now()
+            };
+
+            // Remove the recruitment folder card application from the pipeline desk simultaneously
+            updates[`marketplace/job_applications/${applicationKey}`] = null;
+
+            // 3. Commit batch sequence transactions safely down to Firebase RTDB Core
+            database.ref().update(updates).then(() => {
+                // 4. Output the raw browser alert confirmation containing the generated credentials
+                alert(`📋 SQUAD ACCOUNT PROVISIONED!\n\nUser Handle: ${targetHandle}\nTemporary System PIN: ${generatedPassword}\nAssigned Designation: ${role}\n\nThis security node profile has been committed to database records.`);
+            }).catch(error => {
+                console.error("Firebase Registry Mutation Interruption:", error);
+                alert("Error writing configuration sequences to the network database matrix.");
+            });
+        }
     </script>
 </body>
 </html>
