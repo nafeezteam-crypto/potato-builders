@@ -1274,11 +1274,59 @@ function submitJobApplication() {
             let sb = document.getElementById('sidebar'); if(sb && sb.classList.contains('active')) toggleSidebar();
         }
 
-        function filterMarketplace(category) { currentFilterCategory = category; document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active')); renderMarketGrid(); }
+function filterMarketplace(category) { currentFilterCategory = category; document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active')); renderMarketGrid(); }
 
+        function loginSuccess(username) {
+            currentUser = username;
+            
+            // Save the session locally so they stay logged in on refresh
+            localStorage.setItem('potato_local_session', username);
+            
+            // Hide the authentication screen gate
+            let authGate = document.getElementById('authGate');
+            if (authGate) authGate.style.display = 'none';
+            
+            // Update the UI header to show who is logged in
+            let displayHandle = document.getElementById('terminalUserHandle');
+            if (displayHandle) displayHandle.innerText = username.toUpperCase();
+            
+            alert(`🔓 ACCESS GRANTED: Welcome back to the terminal, ${username.toUpperCase()}.`);
+            
+            // Boot up and sync all your live Firebase dashboards
+            if (typeof syncHRApplications === 'function') syncHRApplications();
+            if (typeof syncActiveSquadRoster === 'function') syncActiveSquadRoster();
+            if (typeof renderMarketGrid === 'function') renderMarketGrid();
+        }
+        
         window.onload = function() {
             let session = localStorage.getItem('potato_local_session');
-            if(session && localAccounts[session]) loginSuccess(session);
+            if (!session) return; // No saved session, keep them at the login gate
+
+            // 1. If it's a hardcoded local account (like nafeez or admin lists), log them straight in
+            if (typeof localAccounts !== 'undefined' && localAccounts[session]) {
+                loginSuccess(session);
+                return;
+            }
+
+            // 2. If it's 'guest' and you are using open guest bypass
+            if (session === 'guest') {
+                loginSuccess('guest');
+                return;
+            }
+
+            // 3. Otherwise, check if they exist in the live Firebase dynamic roster database
+            if (typeof database !== 'undefined') {
+                database.ref(`marketplace/users/${session}`).once('value', snapshot => {
+                    if (snapshot.exists()) {
+                        loginSuccess(session);
+                    } else {
+                        // Handle no longer valid (e.g., deleted from DB), clear the stale session
+                        localStorage.removeItem('potato_local_session');
+                    }
+                }).catch(error => {
+                    console.error("Auto-Auth Matrix Interruption:", error);
+                });
+            }
         };
     </script>
 </body>
