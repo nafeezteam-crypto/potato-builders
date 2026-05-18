@@ -253,7 +253,7 @@
             <span>LBPC <span style="color:var(--primary)">TERMINAL</span></span>
         </div>
         <div style="display:flex; gap:20px; align-items:center;">
-            <div id="userDisplayTag" style="font-size:11px; color:#666;">Not Logged In</div>
+            <div id="terminalUserHandle" style="font-size:11px; color:#666;">Not Logged In</div>
             <div onclick="logoutTerminal()" style="cursor:pointer; font-size: 11px; font-weight: bold; color: #ff4444;">🚪 EXIT</div>
             <div class="cart-trigger" onclick="toggleCart()">🛒 <span class="cart-count" id="cartCount">0</span></div>
         </div>
@@ -1333,23 +1333,29 @@ function submitJobApplication() {
 
         function filterMarketplace(category) { currentFilterCategory = category; document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active')); renderMarketGrid(); }
 
-        function loginSuccess(username) {
+function loginSuccess(username) {
             currentUser = username;
             
-            // Save the session locally so they stay logged in on refresh
             localStorage.setItem('potato_local_session', username);
             
-            // Hide the authentication screen gate
             let authGate = document.getElementById('authGate');
             if (authGate) authGate.style.display = 'none';
             
-            // Update the UI header to show who is logged in
-            let displayHandle = document.getElementById('terminalUserHandle');
-            if (displayHandle) displayHandle.innerText = username.toUpperCase();
+            // 🎵 START STORE AMBIENCE MUSIC SMOOTHLY
+            let bgMusic = document.getElementById('storeBackgroundMusic');
+            if (bgMusic) {
+                bgMusic.volume = 0.20; 
+                bgMusic.play().catch(err => console.log("Audio play deferred:", err));
+            }
+            
+            // 🎯 FIXED TRACKING HOOK: Match with your userDisplayTag ID!
+            let displayHandle = document.getElementById('userDisplayTag');
+            if (displayHandle) {
+                displayHandle.innerText = username.toUpperCase();
+            }
             
             alert(`🔓 ACCESS GRANTED: Welcome back to the terminal, ${username.toUpperCase()}.`);
             
-            // Boot up and sync all your live Firebase dashboards
             if (typeof syncHRApplications === 'function') syncHRApplications();
             if (typeof syncActiveSquadRoster === 'function') syncActiveSquadRoster();
             if (typeof renderMarketGrid === 'function') renderMarketGrid();
