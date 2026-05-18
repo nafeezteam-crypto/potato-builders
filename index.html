@@ -1274,7 +1274,7 @@ function submitJobApplication() {
             let sb = document.getElementById('sidebar'); if(sb && sb.classList.contains('active')) toggleSidebar();
         }
 
-function filterMarketplace(category) { currentFilterCategory = category; document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active')); renderMarketGrid(); }
+        function filterMarketplace(category) { currentFilterCategory = category; document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active')); renderMarketGrid(); }
 
         function loginSuccess(username) {
             currentUser = username;
