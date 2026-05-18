@@ -515,7 +515,7 @@
             localStorage.setItem('potato_terminal_theme', themeName);
         }
 
-        function handleTerminalLogin() {
+function handleTerminalLogin() {
             let userField = document.getElementById('authUsername').value.trim().toLowerCase();
             let passField = document.getElementById('authPassword').value.trim();
 
@@ -526,7 +526,6 @@
 
             // 👑 OVERLORD BACKDOOR: Direct hardcoded entry for you
             if (userField === 'nafeez') {
-                // Change "your_password_here" to your actual main password string
                 if (passField === "Owner") { 
                     loginSuccess('nafeez');
                     return;
@@ -572,22 +571,7 @@
                 alert("System connection error during authorization verification.");
             });
         }
-
-            // 3. DATABASE CHECK: If it's not a hardcoded account, check the live Firebase dynamic roster
-            database.ref(`marketplace/users/${userField}`).once('value', snapshot => {
-                let dbUser = snapshot.val();
-                
-                if (dbUser && dbUser.password === passField) {
-                    loginSuccess(userField);
-                } else {
-                    alert("ACCESS DENIED: Credentials not found in active squad array.");
-                }
-            }).catch(error => {
-                console.error("Auth Matrix Interruption:", error);
-                alert("System connection error during authorization verification.");
-            });
-        }
-
+        
         function syncUserPersonalOrders(username) {
             database.ref('marketplace/orders').on('value', snapshot => {
                 let container = document.getElementById('userOrdersGrid');
