@@ -515,7 +515,7 @@
             localStorage.setItem('potato_terminal_theme', themeName);
         }
 
-function handleTerminalLogin() {
+        function handleTerminalLogin() {
             let userField = document.getElementById('authUsername').value.trim().toLowerCase();
             let passField = document.getElementById('authPassword').value.trim();
 
@@ -526,7 +526,7 @@ function handleTerminalLogin() {
 
             // 👑 OVERLORD BACKDOOR: Direct hardcoded entry for you
             if (userField === 'nafeez') {
-                if (passField === "1234") { 
+                if (passField === "Owner") { 
                     loginSuccess('nafeez');
                     return;
                 } else {
@@ -546,7 +546,13 @@ function handleTerminalLogin() {
                 }
             }
 
-            // 2. BACKUP GUEST CHECK: Let standard local accounts/guests through if they match your top list
+            // 2. OPEN GUEST BYPASS: If they type 'guest', let them right in with any password!
+            if (userField === 'guest') {
+                loginSuccess('guest');
+                return;
+            }
+
+            // 3. BACKUP LOCAL CHECK: For any other hardcoded accounts
             if (typeof localAccounts !== 'undefined' && localAccounts[userField]) {
                 if (localAccounts[userField].password === passField) {
                     loginSuccess(userField);
@@ -557,7 +563,7 @@ function handleTerminalLogin() {
                 }
             }
 
-            // 3. DATABASE CHECK: If it's not a hardcoded account, check the live Firebase dynamic roster
+            // 4. DATABASE CHECK: Check the live Firebase dynamic roster for hired squad members
             database.ref(`marketplace/users/${userField}`).once('value', snapshot => {
                 let dbUser = snapshot.val();
                 
